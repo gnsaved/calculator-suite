@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Body Fat % (Navy) + Lean Mass</title>
+  <style>
+    :root{
+      --text:#0b0d12;
+      --muted:#5b6473;
+      --line:rgba(15,23,42,.14);
+      --line2:rgba(15,23,42,.22);
+      --card:#ffffff;
+      --shadow: 0 20px 50px rgba(2,6,23,.10);
+      --shadow2: 0 10px 22px rgba(2,6,23,.06);
+      --r26:26px; --r18:18px; --r14:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; font-family:var(--sans); color:var(--text);
+      /* Background #2: dot matrix + soft edge fade */
+      background:
+        radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 1px) 0 0 / 18px 18px,
+        radial-gradient(900px 520px at 85% 10%, rgba(0,0,0,.06), transparent 60%),
+        #fff;
+      display:flex; justify-content:center; align-items:center; padding:18px;
+    }
+
+    .wrap{
+      width:min(1080px, 100%);
+      border:1px solid var(--line);
+      border-radius:var(--r26);
+      background:#fff;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: .95fr 1.05fr;
+    }
+    @media (max-width: 980px){ .wrap{grid-template-columns:1fr} }
+
+    .left{
+      border-right:1px solid var(--line);
+      padding:18px;
+    }
+    @media (max-width: 980px){ .left{border-right:0; border-bottom:1px solid var(--line);} }
+
+    .right{ padding:18px; }
+
+    .brand{
+      display:flex; gap:12px; align-items:center; margin-bottom:14px;
+    }
+    .mark{
+      width:42px; height:42px; border-radius:16px;
+      border:1px solid var(--line);
+      background:linear-gradient(135deg, rgba(0,0,0,.10), rgba(0,0,0,.02));
+    }
+    h1{margin:0; font-size:14px; font-weight:950; letter-spacing:.2px}
+    .sub{font-size:12px; color:var(--muted); margin-top:3px}
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      background:var(--card);
+      box-shadow:var(--shadow2);
+      overflow:hidden;
+      margin-top:14px;
+    }
+    .head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(0,0,0,.03), transparent 80%);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .head .t{font-size:12px; color:var(--muted); font-weight:950; text-transform:uppercase; letter-spacing:.28px;}
+    .head .h{font-family:var(--mono); font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;}
+
+    .stack{padding:14px; display:grid; gap:12px;}
+    .row2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 720px){ .row2{grid-template-columns:1fr} }
+
+    label{display:block; font-size:12px; color:var(--muted); font-weight:950; margin-bottom:6px;}
+    input, select{
+      width:100%; padding:12px 12px;
+      border-radius:var(--r14);
+      border:1px solid var(--line);
+      background:#fff; color:var(--text);
+      font-size:14px; outline:none; transition:.12s ease;
+    }
+    input:focus, select:focus{border-color:var(--line2); box-shadow:0 0 0 4px rgba(0,0,0,.07);}
+
+    .btnRow{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media (max-width: 720px){ .btnRow{grid-template-columns:1fr} }
+    .btn{
+      padding:12px 12px; border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; cursor:pointer;
+      font-weight:950; font-size:13px; transition:.12s ease;
+    }
+    .btn.primary{background:#0b0d12; color:#fff; border-color:#0b0d12;}
+    .btn:hover{border-color:var(--line2); transform:translateY(-1px)}
+    .btn:active{transform:translateY(0) scale(.992)}
+
+    .kpi{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      padding:12px;
+      display:grid; gap:6px;
+      background:#fff;
+    }
+    .kpi .big{font-family:var(--mono); font-weight:950; font-size:20px;}
+    .kpi .small{font-size:12px; color:var(--muted); line-height:1.5;}
+
+    .tip{
+      font-size:12px; color:var(--muted); line-height:1.55;
+      padding:12px 14px;
+      border:1px dashed rgba(15,23,42,.22);
+      border-radius:var(--r18);
+      background:rgba(0,0,0,.02);
+      margin-top:14px;
+    }
+
+    .footer{
+      margin-top:14px;
+      font-size:12px; color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .kbd{
+      font-family:var(--mono); border:1px solid var(--line);
+      border-radius:10px; padding:2px 6px; background:#fff; color:var(--text);
+      font-weight:950; font-size:11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="left">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <h1>Body Fat % (US Navy)</h1>
+          <div class="sub">BF% • fat mass • lean mass (quick field method)</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="head">
+          <div class="t">Measurements</div>
+          <div class="h">Keep tape snug, not tight</div>
+        </div>
+        <div class="stack">
+          <div class="row2">
+            <div>
+              <label for="unit">Units</label>
+              <select id="unit">
+                <option value="cm" selected>Centimeters (cm)</option>
+                <option value="in">Inches (in)</option>
+              </select>
+            </div>
+            <div>
+              <label for="sex">Sex</label>
+              <select id="sex">
+                <option value="male" selected>Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label for="height">Height</label>
+              <input id="height" type="number" inputmode="decimal" placeholder="e.g., 175" />
+            </div>
+            <div>
+              <label for="weight">Weight (optional, for lean/fat mass)</label>
+              <input id="weight" type="number" inputmode="decimal" placeholder="e.g., 70" />
+            </div>
+          </div>
+
+          <div class="row2">
+            <div>
+              <label for="neck">Neck</label>
+              <input id="neck" type="number" inputmode="decimal" placeholder="e.g., 38" />
+            </div>
+            <div>
+              <label for="waist">Waist</label>
+              <input id="waist" type="number" inputmode="decimal" placeholder="e.g., 84" />
+            </div>
+          </div>
+
+          <div class="row2" id="hipRow" style="display:none;">
+            <div>
+              <label for="hip">Hip (female only)</label>
+              <input id="hip" type="number" inputmode="decimal" placeholder="e.g., 98" />
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <div style="font-size:12px;color:var(--muted);padding:12px 12px;border:1px solid var(--line);border-radius:var(--r14);">
+                Hip used only for female formula.
+              </div>
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <button class="btn primary" id="calcBtn" type="button">Calculate</button>
+            <button class="btn" id="copyBtn" type="button">Copy summary</button>
+          </div>
+
+          <div class="tip">
+            Measurement notes:
+            <br>• Waist: around navel (exhale normally).
+            <br>• Neck: just below Adam’s apple (level tape).
+            <br>• Hip (female): widest point.
+          </div>
+
+          <div class="footer">
+            <div>Formula uses base-10 logs; expects consistent units.</div>
+            <div><span class="kbd">Enter</span> to calculate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card" style="margin-top:0;">
+        <div class="head">
+          <div class="t">Results</div>
+          <div class="h">BF% + composition</div>
+        </div>
+        <div class="stack">
+          <div class="kpi">
+            <div class="big" id="bfOut">Body fat: —</div>
+            <div class="small" id="bfNote">This is an estimate; hydration and tape placement matter.</div>
+          </div>
+
+          <div class="kpi">
+            <div class="big" id="leanOut">Lean mass: —</div>
+            <div class="small">Lean mass = weight × (1 - BF%).</div>
+          </div>
+
+          <div class="kpi">
+            <div class="big" id="fatOut">Fat mass: —</div>
+            <div class="small">Fat mass = weight × BF%.</div>
+          </div>
+
+          <div class="kpi">
+            <div class="big">Validation</div>
+            <div class="small mono" id="checksOut">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const el = (id) => document.getElementById(id);
+  const unit = el("unit");
+  const sex = el("sex");
+  const hipRow = el("hipRow");
+
+  const height = el("height");
+  const weight = el("weight");
+  const neck = el("neck");
+  const waist = el("waist");
+  const hip = el("hip");
+
+  const bfOut = el("bfOut");
+  const bfNote = el("bfNote");
+  const leanOut = el("leanOut");
+  const fatOut = el("fatOut");
+  const checksOut = el("checksOut");
+
+  function n(v){ const x = Number(v); return Number.isFinite(x) ? x : null; }
+  function fmt(x, d=1){
+    if (!Number.isFinite(x)) return "—";
+    const s = x.toFixed(d);
+    return s.replace(/\.0$/,"");
+  }
+
+  // Convert input to inches (Navy formula is defined in inches).
+  function toInches(val, u){
+    if (!Number.isFinite(val)) return null;
+    return (u === "cm") ? (val / 2.54) : val;
+  }
+
+  function syncSex(){
+    hipRow.style.display = (sex.value === "female") ? "" : "none";
+  }
+
+  function calc(){
+    const u = unit.value;
+
+    const h = toInches(n(height.value), u);
+    const nk = toInches(n(neck.value), u);
+    const ws = toInches(n(waist.value), u);
+    const hp = toInches(n(hip.value), u);
+
+    // Guardrails: need height/neck/waist; hip only for female.
+    if (!h || !nk || !ws || h <= 0 || nk <= 0 || ws <= 0){
+      bfOut.textContent = "Body fat: —";
+      leanOut.textContent = "Lean mass: —";
+      fatOut.textContent = "Fat mass: —";
+      checksOut.textContent = "—";
+      return;
+    }
+
+    let bf;
+    if (sex.value === "male"){
+      const x = ws - nk;
+      if (x <= 0){ bf = NaN; }
+      else bf = 86.010 * Math.log10(x) - 70.041 * Math.log10(h) + 36.76;
+    } else {
+      if (!hp || hp <= 0){ bf = NaN; }
+      else {
+        const x = ws + hp - nk;
+        if (x <= 0) bf = NaN;
+        else bf = 163.205 * Math.log10(x) - 97.684 * Math.log10(h) - 78.387;
+      }
+    }
+
+    const notes = [];
+    if (!Number.isFinite(bf)) notes.push("Bad geometry (check waist/neck/hip inputs).");
+    if (bf < 2 || bf > 70) notes.push("BF% out of plausible range (re-check measurements).");
+
+    const bfClamped = Number.isFinite(bf) ? Math.max(0, Math.min(100, bf)) : NaN;
+
+    bfOut.textContent = Number.isFinite(bfClamped) ? `Body fat: ${fmt(bfClamped,1)}%` : "Body fat: —";
+    bfNote.textContent = notes.length ? notes.join("  |  ") : "Looks consistent.";
+
+    // Lean/fat mass needs weight. Accept kg or lb? Keep weight in the same unit user typed:
+    // If they typed in cm mode, it doesn't mean kg. We keep a selector out of scope here;
+    // simplest is: treat weight as kilograms by default (common). If you want lb support, add a weight-unit toggle.
+    const w = n(weight.value);
+    if (w && w > 0 && Number.isFinite(bfClamped)){
+      const fatMass = w * (bfClamped / 100);
+      const leanMass = w - fatMass;
+      leanOut.textContent = `Lean mass: ${fmt(leanMass,1)} (same unit as weight)`;
+      fatOut.textContent = `Fat mass: ${fmt(fatMass,1)} (same unit as weight)`;
+    } else {
+      leanOut.textContent = "Lean mass: —";
+      fatOut.textContent = "Fat mass: —";
+    }
+
+    // Quick consistency checks for user feedback.
+    const chk = [];
+    if (h < 48 || h > 90) chk.push("Height unusual.");
+    if (ws < 18 || ws > 80) chk.push("Waist unusual.");
+    if (nk < 10 || nk > 30) chk.push("Neck unusual.");
+    if (sex.value === "female" && hp && (hp < 20 || hp > 90)) chk.push("Hip unusual.");
+    checksOut.textContent = chk.length ? chk.join("  |  ") : "No obvious issues.";
+  }
+
+  el("calcBtn").addEventListener("click", calc);
+  el("copyBtn").addEventListener("click", async () => {
+    const text = [
+      bfOut.textContent,
+      leanOut.textContent,
+      fatOut.textContent,
+      `Checks: ${checksOut.textContent}`
+    ].join("\n");
+    try{
+      await navigator.clipboard.writeText(text);
+      const btn = el("copyBtn");
+      const old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => btn.textContent = old, 900);
+    } catch {}
+  });
+
+  unit.addEventListener("change", calc);
+  sex.addEventListener("change", () => { syncSex(); calc(); });
+
+  [height, weight, neck, waist, hip].forEach(x => x.addEventListener("input", () => {}));
+  window.addEventListener("keydown", (e) => { if (e.key === "Enter") calc(); });
+
+  syncSex();
+  calc();
+})();
+</script>
+</body>
+</html>

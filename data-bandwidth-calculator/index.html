@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Data & Bandwidth Tools</title>
+  <style>
+    :root{
+      --text:#0b0d12;
+      --muted:#5b6473;
+      --line:rgba(15,23,42,.14);
+      --line2:rgba(15,23,42,.22);
+      --shadow: 0 18px 44px rgba(2,6,23,.10);
+      --shadow2: 0 10px 22px rgba(2,6,23,.06);
+      --r24:24px; --r18:18px; --r14:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; font-family:var(--sans); color:var(--text);
+      /* Background #5: subtle “terminal” stripes (still white) */
+      background:
+        repeating-linear-gradient(180deg, rgba(0,0,0,.03) 0 1px, transparent 1px 22px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,.02) 0 1px, transparent 1px 28px),
+        radial-gradient(900px 520px at 20% 10%, rgba(0,0,0,.06), transparent 60%),
+        #fff;
+      display:flex; justify-content:center; align-items:center; padding:18px;
+    }
+
+    .shell{
+      width:min(1160px, 100%);
+      border:1px solid var(--line);
+      border-radius:var(--r24);
+      background:#fff;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .top{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(0,0,0,.04), transparent 80%);
+    }
+    h1{margin:0;font-size:14px;font-weight:950;letter-spacing:.2px}
+    .sub{margin-top:3px;font-size:12px;color:var(--muted)}
+    .badge{
+      font-family:var(--mono);
+      font-size:12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      color:var(--muted);
+      background:#fff;
+    }
+
+    .content{padding:16px}
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: 1fr 1fr;
+      align-items:start;
+    }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      background:#fff;
+      box-shadow:var(--shadow2);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(0,0,0,.03), transparent 80%);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .head .t{font-size:12px;color:var(--muted);font-weight:950;text-transform:uppercase;letter-spacing:.28px;}
+    .head .h{font-size:12px;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;}
+    .stack{padding:14px; display:grid; gap:12px;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media (max-width: 720px){ .row2{grid-template-columns:1fr} }
+
+    label{display:block;font-size:12px;color:var(--muted);font-weight:950;margin-bottom:6px;}
+    input, select{
+      width:100%; padding:12px 12px; border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; color:var(--text);
+      font-size:14px; outline:none; transition:.12s ease;
+    }
+    input:focus, select:focus{border-color:var(--line2); box-shadow:0 0 0 4px rgba(0,0,0,.07);}
+
+    .btnRow{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media (max-width: 720px){ .btnRow{grid-template-columns:1fr} }
+    .btn{
+      padding:12px 12px;border-radius:var(--r14);
+      border:1px solid var(--line);background:#fff;cursor:pointer;
+      font-weight:950;font-size:13px;transition:.12s ease;
+    }
+    .btn.primary{background:#0b0d12;color:#fff;border-color:#0b0d12;}
+    .btn:hover{border-color:var(--line2);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0) scale(.992)}
+
+    .kpi{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      padding:12px;
+      display:grid; gap:6px;
+      background:#fff;
+    }
+    .kpi .big{font-family:var(--mono); font-weight:950; font-size:18px;}
+    .kpi .small{font-size:12px;color:var(--muted);line-height:1.5;}
+
+    .toggle{
+      display:flex; gap:10px; align-items:center;
+      border:1px solid var(--line); border-radius:var(--r14);
+      padding:10px 12px; background:#fff;
+      font-size:12px; color:var(--muted); font-weight:950;
+    }
+    .toggle input{width:auto; margin:0}
+
+    .footer{
+      padding:12px 16px; border-top:1px solid var(--line);
+      font-size:12px; color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:#fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <div>
+        <h1>Data & Bandwidth Tools</h1>
+        <div class="sub">Storage conversion • bits/bytes • base-10 vs base-2 • download time</div>
+      </div>
+      <div class="badge">No network calls • deterministic math</div>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+        <!-- Converter -->
+        <div class="panel">
+          <div class="head">
+            <div class="t">Converter</div>
+            <div class="h">Size and speed can use different bases</div>
+          </div>
+          <div class="stack">
+            <div class="toggle">
+              <input id="base2" type="checkbox" />
+              <span>Use base-2 (KiB/MiB/GiB) instead of base-10 (KB/MB/GB)</span>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="sizeVal">Value</label>
+                <input id="sizeVal" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+              </div>
+              <div>
+                <label for="sizeUnit">Unit</label>
+                <select id="sizeUnit"></select>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="asBits">Interpret as</label>
+                <select id="asBits">
+                  <option value="bytes" selected>Bytes</option>
+                  <option value="bits">Bits</option>
+                </select>
+              </div>
+              <div>
+                <label for="outUnit">Convert to</label>
+                <select id="outUnit"></select>
+              </div>
+            </div>
+
+            <div class="kpi">
+              <div class="big" id="convOut">—</div>
+              <div class="small mono" id="convNote">—</div>
+            </div>
+
+            <div class="btnRow">
+              <button class="btn primary" id="copyConv" type="button">Copy conversion</button>
+              <button class="btn" id="resetConv" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download time -->
+        <div class="panel">
+          <div class="head">
+            <div class="t">Download estimator</div>
+            <div class="h">Size ÷ speed → time</div>
+          </div>
+          <div class="stack">
+            <div class="row2">
+              <div>
+                <label for="dlSizeVal">File size</label>
+                <input id="dlSizeVal" type="number" inputmode="decimal" placeholder="e.g., 3" />
+              </div>
+              <div>
+                <label for="dlSizeUnit">Unit</label>
+                <select id="dlSizeUnit"></select>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="dlSpeedVal">Speed</label>
+                <input id="dlSpeedVal" type="number" inputmode="decimal" placeholder="e.g., 25" />
+              </div>
+              <div>
+                <label for="dlSpeedUnit">Unit</label>
+                <select id="dlSpeedUnit">
+                  <option value="Mbps" selected>Mbps (megabits/s)</option>
+                  <option value="MBps">MB/s (megabytes/s)</option>
+                  <option value="Kbps">Kbps</option>
+                  <option value="KBps">KB/s</option>
+                  <option value="Gbps">Gbps</option>
+                  <option value="GBps">GB/s</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="kpi">
+              <div class="big" id="dlOut">—</div>
+              <div class="small mono" id="dlNote">—</div>
+            </div>
+
+            <div class="btnRow">
+              <button class="btn primary" id="copyDl" type="button">Copy time</button>
+              <button class="btn" id="resetDl" type="button">Reset</button>
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.55;">
+              Reminder: 8 bits = 1 byte. Real-world speeds vary; overhead can reduce throughput.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Base-2 toggle affects KiB/MiB/GiB (1024 scale) vs KB/MB/GB (1000 scale).</div>
+      <div>Tip: Mbps is common for ISPs; MB/s is common in download managers.</div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const el = (id) => document.getElementById(id);
+
+  const base2 = el("base2");
+  const sizeVal = el("sizeVal");
+  const sizeUnit = el("sizeUnit");
+  const asBits = el("asBits");
+  const outUnit = el("outUnit");
+  const convOut = el("convOut");
+  const convNote = el("convNote");
+
+  const dlSizeVal = el("dlSizeVal");
+  const dlSizeUnit = el("dlSizeUnit");
+  const dlSpeedVal = el("dlSpeedVal");
+  const dlSpeedUnit = el("dlSpeedUnit");
+  const dlOut = el("dlOut");
+  const dlNote = el("dlNote");
+
+  function n(v){ const x = Number(v); return Number.isFinite(x) ? x : null; }
+
+  // Build unit sets for base-10 and base-2.
+  function unitsForMode(isBase2){
+    if (isBase2){
+      // Byte units in powers of 1024
+      return ["B","KiB","MiB","GiB","TiB","PiB"];
+    }
+    // Byte units in powers of 1000
+    return ["B","KB","MB","GB","TB","PB"];
+  }
+
+  function factor(isBase2){
+    return isBase2 ? 1024 : 1000;
+  }
+
+  function unitIndex(u){
+    const list = unitsForMode(base2.checked);
+    return list.indexOf(u);
+  }
+
+  function fill(sel, arr, preferred){
+    sel.innerHTML = "";
+    arr.forEach(u => {
+      const o = document.createElement("option");
+      o.value = u; o.textContent = u;
+      sel.appendChild(o);
+    });
+    if (preferred && arr.includes(preferred)) sel.value = preferred;
+  }
+
+  function pretty(x){
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax !== 0 && (ax < 1e-9 || ax >= 1e12)) return x.toExponential(10);
+    let s = x.toPrecision(12);
+    if (s.includes("e")) return s;
+    s = s.replace(/(\.\d+?)0+$/,"$1").replace(/\.0$/,"");
+    return s;
+  }
+
+  // Convert an input size to bytes (or bits) then back out.
+  function convertSize(){
+    const v = n(sizeVal.value);
+    if (v === null){ convOut.textContent="—"; convNote.textContent="—"; return; }
+
+    const f = factor(base2.checked);
+    const inIdx = unitIndex(sizeUnit.value);
+    const outIdx = unitIndex(outUnit.value);
+
+    if (inIdx < 0 || outIdx < 0){ convOut.textContent="—"; convNote.textContent="—"; return; }
+
+    // Core: normalize to bytes using selected base.
+    let bytes = v * Math.pow(f, inIdx);
+
+    // Interpret as bits if requested.
+    if (asBits.value === "bits") bytes = bytes / 8;
+
+    // Convert to output bytes.
+    let outBytes = bytes;
+
+    // If user wants output displayed in bits, multiply back.
+    let displayAsBits = false;
+    if (outUnit.value.endsWith("b")) displayAsBits = true; // not used here; keeping hook.
+
+    const outVal = outBytes / Math.pow(f, outIdx);
+
+    const modeLabel = base2.checked ? "base-2 (×1024)" : "base-10 (×1000)";
+    const inType = (asBits.value === "bits") ? "bits" : "bytes";
+
+    convOut.textContent = `${pretty(outVal)} ${outUnit.value}`;
+    convNote.textContent = `Normalized via bytes • ${modeLabel} • input interpreted as ${inType}.`;
+  }
+
+  // Download time: convert size to bits; speed to bits/s; then time = bits / bps.
+  function estimateDownload(){
+    const size = n(dlSizeVal.value);
+    const speed = n(dlSpeedVal.value);
+    if (size === null || speed === null || speed <= 0){
+      dlOut.textContent = "—";
+      dlNote.textContent = "—";
+      return;
+    }
+
+    // Size units follow the same base2 toggle for consistency.
+    const f = factor(base2.checked);
+    const idx = unitIndex(dlSizeUnit.value);
+    if (idx < 0){ dlOut.textContent="—"; dlNote.textContent="—"; return; }
+
+    const bytes = size * Math.pow(f, idx);
+    const bits = bytes * 8;
+
+    // Speed to bits/sec. Mbps = 1e6 bits/s; Kbps = 1e3 bits/s, etc.
+    const sUnit = dlSpeedUnit.value;
+    let bps;
+
+    // Bytes-per-second units.
+    if (sUnit === "KBps") bps = speed * 1000 * 8;
+    else if (sUnit === "MBps") bps = speed * 1000 * 1000 * 8;
+    else if (sUnit === "GBps") bps = speed * 1000 * 1000 * 1000 * 8;
+    // Bits-per-second units.
+    else if (sUnit === "Kbps") bps = speed * 1000;
+    else if (sUnit === "Mbps") bps = speed * 1000 * 1000;
+    else if (sUnit === "Gbps") bps = speed * 1000 * 1000 * 1000;
+    else bps = NaN;
+
+    if (!Number.isFinite(bps) || bps <= 0){
+      dlOut.textContent = "—";
+      dlNote.textContent = "Bad speed unit.";
+      return;
+    }
+
+    const seconds = bits / bps;
+
+    // Format as d hh:mm:ss
+    const s = Math.round(seconds);
+    const days = Math.floor(s / 86400);
+    const rem1 = s % 86400;
+    const hrs = Math.floor(rem1 / 3600);
+    const rem2 = rem1 % 3600;
+    const mins = Math.floor(rem2 / 60);
+    const secs = rem2 % 60;
+
+    const pad = (x) => String(x).padStart(2,"0");
+    const timeStr = (days > 0)
+      ? `${days}d ${pad(hrs)}:${pad(mins)}:${pad(secs)}`
+      : `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+
+    dlOut.textContent = timeStr;
+
+    const modeLabel = base2.checked ? "base-2 size units" : "base-10 size units";
+    dlNote.textContent = `Size: ${pretty(size)} ${dlSizeUnit.value} (${modeLabel}) • Speed: ${pretty(speed)} ${sUnit} • Total seconds: ${s}`;
+  }
+
+  function syncUnitLists(){
+    const list = unitsForMode(base2.checked);
+    fill(sizeUnit, list, "GB");
+    fill(outUnit, list, "MB");
+    fill(dlSizeUnit, list, "GB");
+  }
+
+  el("copyConv").addEventListener("click", async () => {
+    const text = `Conversion: ${sizeVal.value} ${sizeUnit.value} → ${convOut.textContent}`;
+    try{ await navigator.clipboard.writeText(text); } catch {}
+  });
+  el("resetConv").addEventListener("click", () => {
+    sizeVal.value = "";
+    asBits.value = "bytes";
+    syncUnitLists();
+    convertSize();
+  });
+
+  el("copyDl").addEventListener("click", async () => {
+    const text = `Download time: ${dlOut.textContent} (${dlNote.textContent})`;
+    try{ await navigator.clipboard.writeText(text); } catch {}
+  });
+  el("resetDl").addEventListener("click", () => {
+    dlSizeVal.value = "";
+    dlSpeedVal.value = "";
+    dlSpeedUnit.value = "Mbps";
+    syncUnitLists();
+    estimateDownload();
+  });
+
+  base2.addEventListener("change", () => { syncUnitLists(); convertSize(); estimateDownload(); });
+
+  [sizeVal, sizeUnit, asBits, outUnit].forEach(x => {
+    x.addEventListener("input", convertSize);
+    x.addEventListener("change", convertSize);
+  });
+
+  [dlSizeVal, dlSizeUnit, dlSpeedVal, dlSpeedUnit].forEach(x => {
+    x.addEventListener("input", estimateDownload);
+    x.addEventListener("change", estimateDownload);
+  });
+
+  // Init
+  syncUnitLists();
+  convertSize();
+  estimateDownload();
+})();
+</script>
+</body>
+</html>

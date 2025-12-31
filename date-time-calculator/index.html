@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Date & Time Calculator</title>
+  <style>
+    :root{
+      --text:#0b0d12;
+      --muted:#5b6473;
+      --line:rgba(15,23,42,.14);
+      --line2:rgba(15,23,42,.22);
+      --shadow: 0 18px 44px rgba(2,6,23,.10);
+      --shadow2: 0 10px 22px rgba(2,6,23,.06);
+      --r24:24px; --r18:18px; --r14:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; font-family:var(--sans); color:var(--text);
+      /* Background #4: calendar grid */
+      background:
+        linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px) 0 0 / 36px 36px,
+        linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px) 0 0 / 36px 36px,
+        radial-gradient(900px 520px at 85% 10%, rgba(0,0,0,.06), transparent 60%),
+        #fff;
+      display:flex; justify-content:center; align-items:center; padding:18px;
+    }
+
+    .shell{
+      width:min(1120px, 100%);
+      border:1px solid var(--line);
+      border-radius:var(--r24);
+      background:#fff;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .top{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(0,0,0,.04), transparent 80%);
+    }
+    h1{margin:0;font-size:14px;font-weight:950;letter-spacing:.2px}
+    .sub{margin-top:3px;font-size:12px;color:var(--muted)}
+
+    .tabs{display:flex; gap:8px; flex-wrap:wrap;}
+    .tab{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:9px 12px;
+      font-size:12px;
+      font-weight:950;
+      background:#fff;
+      color:var(--muted);
+      cursor:pointer;
+      transition:.12s ease;
+      user-select:none;
+    }
+    .tab.active{background:#0b0d12;color:#fff;border-color:#0b0d12;}
+    .tab:hover{border-color:var(--line2); transform:translateY(-1px)}
+    .tab.active:hover{transform:none}
+
+    .content{padding:16px}
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      background:#fff;
+      box-shadow:var(--shadow2);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px; border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(0,0,0,.03), transparent 80%);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .head .t{font-size:12px;color:var(--muted);font-weight:950;text-transform:uppercase;letter-spacing:.28px;}
+    .head .h{font-size:12px;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;}
+    .stack{padding:14px; display:grid; gap:12px;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media (max-width: 720px){ .row2{grid-template-columns:1fr} }
+
+    label{display:block;font-size:12px;color:var(--muted);font-weight:950;margin-bottom:6px;}
+    input, select{
+      width:100%; padding:12px 12px; border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; color:var(--text);
+      font-size:14px; outline:none; transition:.12s ease;
+    }
+    input:focus, select:focus{border-color:var(--line2); box-shadow:0 0 0 4px rgba(0,0,0,.07);}
+
+    .btnRow{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media (max-width: 720px){ .btnRow{grid-template-columns:1fr} }
+    .btn{
+      padding:12px 12px;border-radius:var(--r14);
+      border:1px solid var(--line);background:#fff;cursor:pointer;
+      font-weight:950;font-size:13px;transition:.12s ease;
+    }
+    .btn.primary{background:#0b0d12;color:#fff;border-color:#0b0d12;}
+    .btn:hover{border-color:var(--line2);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0) scale(.992)}
+
+    .kpi{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      padding:12px;
+      display:grid; gap:6px;
+    }
+    .kpi .big{font-family:var(--mono); font-weight:950; font-size:18px;}
+    .kpi .small{font-size:12px;color:var(--muted);line-height:1.5;}
+
+    .toggle{
+      display:flex; gap:10px; align-items:center;
+      border:1px solid var(--line); border-radius:var(--r14);
+      padding:10px 12px; background:#fff;
+      font-size:12px; color:var(--muted); font-weight:950;
+    }
+    .toggle input{width:auto; margin:0}
+
+    .footer{
+      padding:12px 16px; border-top:1px solid var(--line);
+      font-size:12px; color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:#fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <div>
+        <h1>Date & Time Calculator</h1>
+        <div class="sub">Difference between two timestamps • Add duration • Business-day option</div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="tabDiff" type="button">Difference</button>
+        <button class="tab" id="tabAdd" type="button">Add Duration</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+        <!-- Inputs -->
+        <div class="panel">
+          <div class="head">
+            <div class="t">Inputs</div>
+            <div class="h">Local time (browser)</div>
+          </div>
+
+          <!-- Difference -->
+          <div class="stack" id="viewDiff">
+            <div>
+              <label for="a">From</label>
+              <input id="a" type="datetime-local" />
+            </div>
+            <div>
+              <label for="b">To</label>
+              <input id="b" type="datetime-local" />
+            </div>
+
+            <div class="toggle">
+              <input id="bizDiff" type="checkbox" />
+              <span>Business days only (exclude weekends) — days portion</span>
+            </div>
+
+            <div class="btnRow">
+              <button class="btn primary" id="calcDiff" type="button">Calculate</button>
+              <button class="btn" id="copyDiff" type="button">Copy result</button>
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.55;">
+              Business-day mode counts weekday days between dates; hours/minutes still come from timestamp difference.
+            </div>
+          </div>
+
+          <!-- Add duration -->
+          <div class="stack" id="viewAdd" style="display:none;">
+            <div>
+              <label for="base">Base timestamp</label>
+              <input id="base" type="datetime-local" />
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="dur">Duration string</label>
+                <input id="dur" type="text" placeholder="e.g., 2w 3d 5h 10m" />
+              </div>
+              <div>
+                <label for="direction">Direction</label>
+                <select id="direction">
+                  <option value="add" selected>Add</option>
+                  <option value="sub">Subtract</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="toggle">
+              <input id="bizAdd" type="checkbox" />
+              <span>Business days only (skip weekends) — day/week units</span>
+            </div>
+
+            <div class="btnRow">
+              <button class="btn primary" id="calcAdd" type="button">Apply</button>
+              <button class="btn" id="copyAdd" type="button">Copy result</button>
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.55;">
+              Supported units: y, mo, w, d, h, m, s. Months=30 days, years=365 days (fixed).
+            </div>
+          </div>
+        </div>
+
+        <!-- Outputs -->
+        <div class="panel">
+          <div class="head">
+            <div class="t">Outputs</div>
+            <div class="h" id="outHint">—</div>
+          </div>
+          <div class="stack">
+            <div class="kpi">
+              <div class="big" id="mainOut">—</div>
+              <div class="small" id="mainNote">Fill inputs and calculate.</div>
+            </div>
+
+            <div class="kpi">
+              <div class="big">Breakdown</div>
+              <div class="small mono" id="breakOut">—</div>
+            </div>
+
+            <div class="kpi">
+              <div class="big">Seconds</div>
+              <div class="small mono" id="secOut">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Tip: add duration like <b class="kbd">1w 2d</b> without commas.</div>
+      <div>All calculations run locally.</div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const el = (id) => document.getElementById(id);
+
+  const tabDiff = el("tabDiff");
+  const tabAdd  = el("tabAdd");
+  const viewDiff = el("viewDiff");
+  const viewAdd  = el("viewAdd");
+
+  const outHint = el("outHint");
+  const mainOut = el("mainOut");
+  const mainNote = el("mainNote");
+  const breakOut = el("breakOut");
+  const secOut = el("secOut");
+
+  function setTab(which){
+    tabDiff.classList.toggle("active", which === "diff");
+    tabAdd.classList.toggle("active", which === "add");
+    viewDiff.style.display = (which === "diff") ? "" : "none";
+    viewAdd.style.display  = (which === "add") ? "" : "none";
+    outHint.textContent = (which === "diff") ? "Difference mode" : "Add duration mode";
+    clearOut();
+  }
+
+  function clearOut(){
+    mainOut.textContent = "—";
+    mainNote.textContent = "Fill inputs and calculate.";
+    breakOut.textContent = "—";
+    secOut.textContent = "—";
+  }
+
+  function fmt2(n){ return String(n).padStart(2,"0"); }
+
+  // Basic duration breakdown from milliseconds.
+  function breakdown(ms){
+    const sign = ms < 0 ? -1 : 1;
+    ms = Math.abs(ms);
+
+    const s = Math.floor(ms / 1000);
+    const days = Math.floor(s / 86400);
+    const rem1 = s % 86400;
+    const hrs = Math.floor(rem1 / 3600);
+    const rem2 = rem1 % 3600;
+    const mins = Math.floor(rem2 / 60);
+    const secs = rem2 % 60;
+
+    return {sign, days, hrs, mins, secs, totalSeconds: sign * s};
+  }
+
+  // Count weekdays between two dates (date part only).
+  function businessDaysBetween(d1, d2){
+    // Normalize to midnight.
+    const a = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+    const b = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+    let start = a, end = b, sign = 1;
+    if (a > b){ start = b; end = a; sign = -1; }
+
+    let days = 0;
+    for (let d = new Date(start); d < end; d.setDate(d.getDate()+1)){
+      const day = d.getDay(); // 0 Sun, 6 Sat
+      if (day !== 0 && day !== 6) days++;
+    }
+    return sign * days;
+  }
+
+  function calcDiff(){
+    const aVal = el("a").value;
+    const bVal = el("b").value;
+    if (!aVal || !bVal) return clearOut();
+
+    const a = new Date(aVal);
+    const b = new Date(bVal);
+
+    const ms = b - a;
+    const bd = breakdown(ms);
+
+    // Business-day mode: replace "days" with weekday count (date-only).
+    let daysShown = bd.days * bd.sign;
+    if (el("bizDiff").checked){
+      daysShown = businessDaysBetween(a, b);
+    }
+
+    const signChar = (ms < 0) ? "-" : "";
+    mainOut.textContent = `${signChar}${Math.abs(daysShown)}d ${fmt2(bd.hrs)}h ${fmt2(bd.mins)}m ${fmt2(bd.secs)}s`;
+    mainNote.textContent = el("bizDiff").checked
+      ? "Days shown are weekday-only; time part is raw timestamp difference."
+      : "Raw timestamp difference.";
+
+    breakOut.textContent =
+      `Days: ${daysShown}\nHours: ${bd.sign * bd.hrs}\nMinutes: ${bd.sign * bd.mins}\nSeconds: ${bd.sign * bd.secs}`;
+
+    secOut.textContent = String(bd.totalSeconds);
+  }
+
+  // Parse duration string like: "2w 3d 5h 10m"
+  function parseDuration(str){
+    // Units: y, mo, w, d, h, m, s
+    // Fixed conversions: mo=30d, y=365d
+    const unitSeconds = {
+      y: 365*86400,
+      mo: 30*86400,
+      w: 7*86400,
+      d: 86400,
+      h: 3600,
+      m: 60,
+      s: 1
+    };
+
+    const clean = (str || "").trim().toLowerCase();
+    if (!clean) return null;
+
+    // Accept tokens like "2w", "3 d", "10m"
+    const re = /(\d+(?:\.\d+)?)\s*(y|mo|w|d|h|m|s)\b/g;
+    let match, total = 0;
+    let found = false;
+
+    while ((match = re.exec(clean)) !== null){
+      found = true;
+      const val = Number(match[1]);
+      const u = match[2];
+      if (!Number.isFinite(val)) continue;
+      total += val * unitSeconds[u];
+    }
+
+    return found ? total : null; // seconds
+  }
+
+  // Add N "business days" (skip weekends). Only used for day/week components.
+  function addBusinessDays(base, days){
+    const sign = days < 0 ? -1 : 1;
+    let remaining = Math.abs(days);
+    const d = new Date(base.getTime());
+
+    while (remaining > 0){
+      d.setDate(d.getDate() + sign);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6) remaining--;
+    }
+    return d;
+  }
+
+  function calcAdd(){
+    const baseVal = el("base").value;
+    const durStr = el("dur").value;
+    if (!baseVal || !durStr) return clearOut();
+
+    const base = new Date(baseVal);
+    const seconds = parseDuration(durStr);
+    if (seconds === null) return clearOut();
+
+    const dir = el("direction").value;
+    const sign = (dir === "add") ? 1 : -1;
+
+    // Business-day mode: apply weeks/days via skipping weekends, then add remaining seconds.
+    if (el("bizAdd").checked){
+      // Split seconds into day-ish chunks and remainder.
+      const total = sign * seconds;
+      const wholeDays = (total >= 0) ? Math.floor(total / 86400) : Math.ceil(total / 86400);
+      const remSeconds = total - (wholeDays * 86400);
+
+      const afterDays = addBusinessDays(base, wholeDays);
+      const result = new Date(afterDays.getTime() + remSeconds * 1000);
+
+      mainOut.textContent = result.toLocaleString();
+      mainNote.textContent = "Weeks/days applied as business days; remainder applied as raw time.";
+      breakOut.textContent = `Business days applied: ${wholeDays}\nRemainder seconds: ${remSeconds}`;
+      secOut.textContent = String(Math.round((result - base) / 1000));
+      return;
+    }
+
+    // Simple mode: raw seconds math.
+    const result = new Date(base.getTime() + (sign * seconds) * 1000);
+    mainOut.textContent = result.toLocaleString();
+    mainNote.textContent = "Fixed months/years; raw timestamp math.";
+    breakOut.textContent = `Delta seconds: ${sign * seconds}`;
+    secOut.textContent = String(sign * seconds);
+  }
+
+  function copy(text){
+    return navigator.clipboard.writeText(text).catch(() => {});
+  }
+
+  el("calcDiff").addEventListener("click", calcDiff);
+  el("calcAdd").addEventListener("click", calcAdd);
+
+  el("copyDiff").addEventListener("click", async () => {
+    await copy(`Difference: ${mainOut.textContent}\nSeconds: ${secOut.textContent}`);
+  });
+  el("copyAdd").addEventListener("click", async () => {
+    await copy(`Result: ${mainOut.textContent}\nSeconds: ${secOut.textContent}`);
+  });
+
+  tabDiff.addEventListener("click", () => setTab("diff"));
+  tabAdd.addEventListener("click", () => setTab("add"));
+
+  // Seed defaults to "now" for convenience.
+  const now = new Date();
+  const isoLocal = (d) => {
+    const pad = (x) => String(x).padStart(2,"0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  el("a").value = isoLocal(now);
+  el("b").value = isoLocal(new Date(now.getTime() + 3600*1000));
+  el("base").value = isoLocal(now);
+  el("dur").value = "2d 5h";
+
+  setTab("diff");
+})();
+</script>
+</body>
+</html>

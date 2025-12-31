@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Loan / Mortgage Calculator</title>
+  <style>
+    :root{
+      --text:#0b0d12;
+      --muted:#5b6473;
+      --line:rgba(15,23,42,.14);
+      --line2:rgba(15,23,42,.22);
+      --card:#ffffff;
+      --shadow: 0 16px 40px rgba(2,6,23,.10);
+      --shadow2: 0 10px 22px rgba(2,6,23,.06);
+      --r24:24px; --r18:18px; --r14:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; font-family:var(--sans); color:var(--text);
+      /* Background #3: paper ledger lines */
+      background:
+        repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0 1px, transparent 1px 28px),
+        radial-gradient(900px 520px at 20% 0%, rgba(0,0,0,.05), transparent 60%),
+        #fff;
+      display:flex; justify-content:center; align-items:center; padding:18px;
+    }
+
+    .shell{
+      width:min(1180px, 100%);
+      border:1px solid var(--line);
+      border-radius:var(--r24);
+      background:#fff;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .top{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(0,0,0,.04), transparent 80%);
+    }
+    h1{margin:0;font-size:14px;font-weight:950;letter-spacing:.2px}
+    .sub{margin-top:3px;font-size:12px;color:var(--muted)}
+    .chip{border:1px solid var(--line); border-radius:999px; padding:8px 12px; font-size:12px; color:var(--muted);}
+    .chip b{color:var(--text); font-family:var(--mono);}
+
+    .content{padding:16px}
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: 420px 1fr;
+      align-items:start;
+    }
+    @media (max-width: 1020px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      background:#fff;
+      box-shadow:var(--shadow2);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px; border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(0,0,0,.03), transparent 80%);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .head .t{font-size:12px;color:var(--muted);font-weight:950;letter-spacing:.28px;text-transform:uppercase;}
+    .head .h{font-size:12px;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;}
+    .stack{padding:14px; display:grid; gap:12px;}
+
+    label{display:block;font-size:12px;color:var(--muted);font-weight:950;margin-bottom:6px;letter-spacing:.12px;}
+    input, select{
+      width:100%; padding:12px 12px; border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; color:var(--text);
+      font-size:14px; outline:none; transition:.12s ease;
+    }
+    input:focus, select:focus{border-color:var(--line2); box-shadow:0 0 0 4px rgba(0,0,0,.07);}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media (max-width: 720px){ .row2{grid-template-columns:1fr} }
+
+    .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .btn{
+      padding:12px 12px;border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; cursor:pointer;
+      font-weight:950;font-size:13px; transition:.12s ease;
+    }
+    .btn.primary{background:#0b0d12;color:#fff;border-color:#0b0d12;}
+    .btn:hover{border-color:var(--line2); transform:translateY(-1px)}
+    .btn:active{transform:translateY(0) scale(.992)}
+
+    .kpis{display:grid; gap:10px; grid-template-columns:repeat(3, 1fr);}
+    @media (max-width: 900px){ .kpis{grid-template-columns:1fr} }
+    .kpi{
+      border:1px solid var(--line); border-radius:var(--r18);
+      padding:12px; background:#fff; display:grid; gap:6px;
+    }
+    .kpi .big{font-family:var(--mono); font-weight:950; font-size:18px;}
+    .kpi .small{font-size:12px; color:var(--muted); line-height:1.45;}
+
+    .tableWrap{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      overflow:hidden;
+      background:#fff;
+    }
+    table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px;}
+    thead th{
+      text-align:left; padding:10px 12px; border-bottom:1px solid var(--line);
+      background:rgba(0,0,0,.03);
+      font-weight:950; color:#111;
+      position:sticky; top:0; z-index:1;
+    }
+    tbody td{
+      padding:10px 12px; border-bottom:1px solid rgba(15,23,42,.08);
+      color:#111;
+    }
+    tbody tr:hover{background:rgba(0,0,0,.02)}
+    .scroll{
+      max-height:520px; overflow:auto;
+    }
+
+    .footer{
+      padding:12px 16px; border-top:1px solid var(--line);
+      font-size:12px; color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:#fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <div>
+        <h1>Loan / Mortgage Calculator</h1>
+        <div class="sub">EMI • total interest • amortization • extra payment impact</div>
+      </div>
+      <div class="chip">Schedule: <b>Monthly</b></div>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+        <div class="panel">
+          <div class="head">
+            <div class="t">Inputs</div>
+            <div class="h">APR is annual; payments monthly</div>
+          </div>
+          <div class="stack">
+            <div>
+              <label for="principal">Principal (loan amount)</label>
+              <input id="principal" type="number" inputmode="decimal" placeholder="e.g., 150000" />
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="apr">APR (%)</label>
+                <input id="apr" type="number" inputmode="decimal" placeholder="e.g., 12.5" />
+              </div>
+              <div>
+                <label for="years">Term (years)</label>
+                <input id="years" type="number" inputmode="numeric" placeholder="e.g., 5" />
+              </div>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="extra">Extra payment (per month)</label>
+                <input id="extra" type="number" inputmode="decimal" placeholder="e.g., 100" />
+              </div>
+              <div>
+                <label for="startDate">Start date (optional)</label>
+                <input id="startDate" type="month" />
+              </div>
+            </div>
+
+            <div class="btnRow">
+              <button class="btn primary" id="calcBtn" type="button">Calculate</button>
+              <button class="btn" id="copyBtn" type="button">Copy summary</button>
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.55;">
+              Note: If APR is 0, payment becomes principal / months. Extra payment shortens the term.
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; gap:14px;">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="big" id="pmtOut">Payment: —</div>
+              <div class="small">Base monthly payment (excluding extra).</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="interestOut">Total interest: —</div>
+              <div class="small">Sum of interest across schedule.</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="termOut">Payoff time: —</div>
+              <div class="small">Months to reach zero balance.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="head">
+              <div class="t">Amortization</div>
+              <div class="h" id="tableHint">—</div>
+            </div>
+
+            <div class="stack">
+              <div class="tableWrap">
+                <div class="scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Payment</th>
+                        <th>Interest</th>
+                        <th>Principal</th>
+                        <th>Extra</th>
+                        <th>Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);">
+                If you want: export CSV + yearly summary (principal/interest by year).
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>All calculations are local. No storage unless you add it.</div>
+      <div>Tip: Try an extra payment and watch payoff months drop.</div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const el = (id) => document.getElementById(id);
+
+  const principal = el("principal");
+  const apr = el("apr");
+  const years = el("years");
+  const extra = el("extra");
+  const startDate = el("startDate");
+
+  const pmtOut = el("pmtOut");
+  const interestOut = el("interestOut");
+  const termOut = el("termOut");
+  const tbody = el("tbody");
+  const tableHint = el("tableHint");
+
+  const calcBtn = el("calcBtn");
+  const copyBtn = el("copyBtn");
+
+  function n(v){ const x = Number(v); return Number.isFinite(x) ? x : null; }
+  function money(x){
+    if (!Number.isFinite(x)) return "—";
+    return x.toLocaleString(undefined, {maximumFractionDigits:2, minimumFractionDigits:2});
+  }
+
+  function parseStartMonth(){
+    // startDate is "YYYY-MM". If missing, return null (table can show blank).
+    const s = startDate.value;
+    if (!s) return null;
+    const [y,m] = s.split("-").map(Number);
+    if (!y || !m) return null;
+    return new Date(y, m-1, 1);
+  }
+
+  function addMonths(dt, k){
+    const d = new Date(dt.getTime());
+    d.setMonth(d.getMonth() + k);
+    return d;
+  }
+
+  function formatMonth(dt){
+    if (!dt) return "";
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,"0");
+    return `${y}-${m}`;
+  }
+
+  // Monthly payment formula for amortizing loan.
+  function monthlyPayment(P, r, months){
+    if (months <= 0) return NaN;
+    if (r === 0) return P / months;
+    const pow = Math.pow(1 + r, months);
+    return P * (r * pow) / (pow - 1);
+  }
+
+  function calc(){
+    const P = n(principal.value);
+    const aprPct = n(apr.value);
+    const Y = n(years.value);
+    const X = n(extra.value) || 0;
+
+    tbody.innerHTML = "";
+
+    if (!P || P <= 0 || Y === null || Y <= 0 || aprPct === null || aprPct < 0){
+      pmtOut.textContent = "Payment: —";
+      interestOut.textContent = "Total interest: —";
+      termOut.textContent = "Payoff time: —";
+      tableHint.textContent = "—";
+      return;
+    }
+
+    const months = Math.round(Y * 12);
+    const r = (aprPct / 100) / 12;
+
+    const basePmt = monthlyPayment(P, r, months);
+    if (!Number.isFinite(basePmt) || basePmt <= 0){
+      pmtOut.textContent = "Payment: —";
+      interestOut.textContent = "Total interest: —";
+      termOut.textContent = "Payoff time: —";
+      tableHint.textContent = "—";
+      return;
+    }
+
+    // Build schedule. Stop when balance <= 0 or we hit a sensible cap.
+    let bal = P;
+    let totalInterest = 0;
+    const start = parseStartMonth();
+    const cap = 2000; // hard cap to avoid infinite loops on weird inputs.
+
+    for (let i=1; i<=cap && bal > 0.00001; i++){
+      const interest = (r === 0) ? 0 : (bal * r);
+      let principalPay = basePmt - interest;
+
+      // If base payment can't even cover interest, it's a broken loan.
+      if (principalPay <= 0){
+        tableHint.textContent = "Payment does not cover interest (negative amortization).";
+        break;
+      }
+
+      // Extra payment applied to principal only.
+      let extraPay = Math.max(0, X);
+
+      // Final payment adjustment: don't overpay principal.
+      if (principalPay + extraPay > bal){
+        const over = (principalPay + extraPay) - bal;
+        // Reduce extra first, then principal payment.
+        const reduceExtra = Math.min(extraPay, over);
+        extraPay -= reduceExtra;
+        const over2 = over - reduceExtra;
+        principalPay -= over2;
+      }
+
+      bal = bal - (principalPay + extraPay);
+      totalInterest += interest;
+
+      const dt = start ? addMonths(start, i-1) : null;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i}</td>
+        <td>${formatMonth(dt)}</td>
+        <td>${money(basePmt + extraPay)}</td>
+        <td>${money(interest)}</td>
+        <td>${money(principalPay)}</td>
+        <td>${money(extraPay)}</td>
+        <td>${money(Math.max(0, bal))}</td>
+      `;
+      tbody.appendChild(tr);
+
+      // If the final row cleared it, exit.
+      if (bal <= 0.00001) {
+        bal = 0;
+        break;
+      }
+    }
+
+    const rows = tbody.querySelectorAll("tr").length;
+
+    pmtOut.textContent = `Payment: ${money(basePmt)}`;
+    interestOut.textContent = `Total interest: ${money(totalInterest)}`;
+    termOut.textContent = `Payoff time: ${rows} months`;
+    tableHint.textContent = `Base ${money(basePmt)} + extra ${money(X)} (if set)`;
+
+  }
+
+  calcBtn.addEventListener("click", calc);
+  copyBtn.addEventListener("click", async () => {
+    const text = [
+      pmtOut.textContent,
+      interestOut.textContent,
+      termOut.textContent,
+      `Extra/month: ${extra.value || 0}`
+    ].join("\n");
+    try{
+      await navigator.clipboard.writeText(text);
+      const old = copyBtn.textContent;
+      copyBtn.textContent = "Copied";
+      setTimeout(() => copyBtn.textContent = old, 900);
+    } catch {}
+  });
+
+  window.addEventListener("keydown", (e) => { if (e.key === "Enter") calc(); });
+
+  // Default demo values (remove if you want blank).
+  principal.value = "";
+  apr.value = "";
+  years.value = "";
+  extra.value = "";
+
+  calc();
+})();
+</script>
+</body>
+</html>

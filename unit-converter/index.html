@@ -1,0 +1,1695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculator + BMI + Unit Converter</title>
+  <style>
+    :root{
+      --bg:#f6f8fc;
+      --card:#ffffff;
+      --card2:#fbfcff;
+      --text:#0b1220;
+      --muted:#516074;
+      --line:rgba(15,23,42,.12);
+      --line2:rgba(15,23,42,.18);
+
+      --accent:#6d28d9;   /* purple */
+      --accent2:#16a34a;  /* green */
+      --danger:#dc2626;   /* red */
+      --warn:#d97706;     /* amber */
+
+      --shadow: 0 18px 40px rgba(2,6,23,.10);
+      --shadow2: 0 10px 26px rgba(2,6,23,.08);
+
+      --r22:22px;
+      --r16:16px;
+      --r14:14px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html, body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 20% 0%, rgba(109,40,217,.10), transparent 60%),
+        radial-gradient(800px 600px at 90% 20%, rgba(22,163,74,.08), transparent 60%),
+        var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(1180px, 100%);
+      display:grid;
+      gap:14px;
+    }
+
+    .shell{
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      border:1px solid var(--line);
+      border-radius: var(--r22);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .topbar{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(109,40,217,.06), transparent 75%);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .logo{
+      width:36px;height:36px;border-radius:14px;
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 60%),
+        linear-gradient(135deg, rgba(109,40,217,.95), rgba(22,163,74,.70));
+      box-shadow: 0 10px 22px rgba(109,40,217,.14), 0 10px 22px rgba(22,163,74,.08);
+      border:1px solid rgba(15,23,42,.08);
+    }
+    .brandText{line-height:1.1; min-width:0;}
+    .brandText .name{font-weight:900; letter-spacing:.2px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .brandText .sub{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .tabBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.2px;
+      cursor:pointer;
+      transition:.12s ease;
+      user-select:none;
+    }
+    .tabBtn:hover{border-color:var(--line2); color:var(--text); transform:translateY(-1px)}
+    .tabBtn.active{
+      color:#fff;
+      background: linear-gradient(180deg, rgba(109,40,217,.95), rgba(109,40,217,.80));
+      border-color: rgba(109,40,217,.35);
+      box-shadow: 0 10px 20px rgba(109,40,217,.14);
+      transform:none;
+    }
+
+    .barControls{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      font-size:12px;
+      user-select:none;
+    }
+    .pill strong{color:var(--text); font-weight:900}
+
+    .seg{
+      display:flex;
+      border:1px solid var(--line);
+      border-radius:999px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .seg button{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      padding:9px 12px;
+      font-weight:900;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .seg button.active{
+      background: linear-gradient(180deg, rgba(15,23,42,.08), rgba(15,23,42,.02));
+      color:var(--text);
+    }
+
+    .content{padding:14px}
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      align-items:stretch;
+    }
+    @media (max-width: 1020px){
+      .grid2{grid-template-columns:1fr}
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius: var(--r16);
+      background:#fff;
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .panelHead{
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: linear-gradient(180deg, rgba(15,23,42,.03), transparent 75%);
+    }
+    .panelHead .title{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.28px;
+      color:var(--muted);
+      font-weight:900;
+    }
+    .panelHead .hint{
+      font-size:12px;
+      color:var(--muted);
+      font-family:var(--mono);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:70%;
+    }
+
+    /* Display */
+    .display{
+      padding:12px;
+      display:grid;
+      gap:10px;
+    }
+    .expr{
+      font-family:var(--mono);
+      font-size:13px;
+      color:var(--muted);
+      min-height:22px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .resRow{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .result{
+      font-family:var(--mono);
+      font-size:30px;
+      font-weight:950;
+      letter-spacing:.2px;
+      word-break:break-word;
+    }
+    .mini{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .miniBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:12px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.12s ease;
+      user-select:none;
+    }
+    .miniBtn:hover{border-color:var(--line2); color:var(--text); transform:translateY(-1px)}
+    .miniBtn:active{transform:translateY(0)}
+    .miniBtn.primary{
+      color:#fff;
+      border-color: rgba(109,40,217,.35);
+      background: linear-gradient(180deg, rgba(109,40,217,.92), rgba(109,40,217,.78));
+    }
+    .miniBtn.good{
+      color:#fff;
+      border-color: rgba(22,163,74,.35);
+      background: linear-gradient(180deg, rgba(22,163,74,.90), rgba(22,163,74,.74));
+    }
+
+    /* Keypads */
+    .keypad{
+      padding:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 1020px){
+      .keypad{grid-template-columns:1fr}
+    }
+
+    .subpanel{
+      border:1px solid var(--line);
+      border-radius: var(--r16);
+      background: linear-gradient(180deg, rgba(15,23,42,.02), #fff);
+      padding:10px;
+    }
+
+    .grid{
+      display:grid;
+      gap:8px;
+    }
+    .grid.func{ grid-template-columns: repeat(5, minmax(0,1fr)); }
+    .grid.ops{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .grid.num{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+
+    button.key{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:12px 10px;
+      border-radius:16px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.12px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.06);
+      transition:.10s ease;
+      user-select:none;
+    }
+    button.key:hover{border-color:var(--line2); transform:translateY(-1px)}
+    button.key:active{transform:translateY(0) scale(.992)}
+    button.key.muted{color:var(--muted)}
+    button.key.accent{
+      color:#fff;
+      border-color: rgba(109,40,217,.35);
+      background: linear-gradient(180deg, rgba(109,40,217,.92), rgba(109,40,217,.78));
+    }
+    button.key.good{
+      color:#fff;
+      border-color: rgba(22,163,74,.35);
+      background: linear-gradient(180deg, rgba(22,163,74,.90), rgba(22,163,74,.74));
+    }
+    button.key.danger{
+      color:#fff;
+      border-color: rgba(220,38,38,.35);
+      background: linear-gradient(180deg, rgba(220,38,38,.92), rgba(220,38,38,.76));
+    }
+    button.key.wide{ grid-column: span 2; }
+
+    /* History */
+    .hList{
+      padding:12px;
+      display:grid;
+      gap:10px;
+      overflow:auto;
+      max-height: 560px;
+      align-content:start;
+    }
+    .hItem{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: var(--r16);
+      padding:10px 10px;
+      cursor:pointer;
+      box-shadow: 0 10px 18px rgba(2,6,23,.05);
+      transition:.12s ease;
+    }
+    .hItem:hover{border-color:var(--line2); transform:translateY(-1px)}
+    .hExpr{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .hRes{
+      font-family:var(--mono);
+      font-size:15px;
+      font-weight:950;
+      margin-top:6px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    /* Forms (BMI & Converter) */
+    .stack{padding:12px; display:grid; gap:12px;}
+    .formRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 720px){
+      .formRow{grid-template-columns:1fr}
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.15px;
+      margin-bottom:6px;
+    }
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+      transition:.12s ease;
+    }
+    input:focus, select:focus{ border-color: rgba(109,40,217,.35); box-shadow: 0 0 0 4px rgba(109,40,217,.10); }
+    .note{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .kpi{
+      border:1px solid var(--line);
+      border-radius: var(--r16);
+      background: linear-gradient(180deg, rgba(109,40,217,.06), rgba(255,255,255,0));
+      padding:12px;
+      display:grid;
+      gap:6px;
+      box-shadow: 0 10px 18px rgba(2,6,23,.05);
+    }
+    .kpi .big{
+      font-family:var(--mono);
+      font-size:22px;
+      font-weight:950;
+    }
+    .kpi .small{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .pillTag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:7px 10px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+    }
+    .pillTag.ok{border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.07); color:#166534}
+    .pillTag.warn{border-color:rgba(217,119,6,.25); background:rgba(217,119,6,.07); color:#92400e}
+    .pillTag.bad{border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.07); color:#991b1b}
+
+    .footer{
+      padding:12px 16px;
+      border-top:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .kbd{
+      font-family:var(--mono);
+      border:1px solid var(--line);
+      padding:2px 6px;
+      border-radius:10px;
+      background:#fff;
+      color:var(--text);
+      font-size:11px;
+      font-weight:900;
+    }
+
+    .hidden{display:none !important;}
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brandText">
+            <div class="name">Calculator Suite</div>
+            <div class="sub">Scientific • BMI/Weight • Unit conversions</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+          <div class="tabs">
+            <button class="tabBtn active" id="tabCalc" type="button">Scientific</button>
+            <button class="tabBtn" id="tabBmi" type="button">BMI & Weight</button>
+            <button class="tabBtn" id="tabConv" type="button">Converter</button>
+          </div>
+
+          <div class="barControls" id="calcControls">
+            <div class="seg" role="group" aria-label="Angle mode">
+              <button id="radBtn" class="active" type="button">RAD</button>
+              <button id="degBtn" type="button">DEG</button>
+            </div>
+            <div class="pill" title="Memory register">M: <strong id="memLabel">0</strong></div>
+            <div class="pill" title="Last answer">Ans: <strong id="ansLabel">0</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCIENTIFIC -->
+      <div class="content" id="viewCalc">
+        <div class="grid2">
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Scientific</div>
+              <div class="hint">Try <span class="kbd">sin(30)</span> • <span class="kbd">nCr(10,3)</span> • <span class="kbd">2π(3+4)</span></div>
+            </div>
+
+            <div class="display">
+              <div class="expr" id="exprOut"></div>
+              <div class="resRow">
+                <div class="result" id="resOut">0</div>
+                <div class="mini">
+                  <button class="miniBtn" id="copyBtn" type="button">Copy</button>
+                  <button class="miniBtn primary" id="useAnsBtn" type="button">Ans</button>
+                  <button class="miniBtn good" id="evalBtn" type="button">=</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="keypad">
+              <div class="subpanel">
+                <div class="panelHead" style="padding:0 0 10px 0; border:0; background:transparent;">
+                  <div class="title">Functions</div>
+                  <div class="hint"><span class="kbd">Enter</span> eval • <span class="kbd">Backspace</span> del • <span class="kbd">Esc</span> clear</div>
+                </div>
+                <div class="grid func">
+                  <button class="key muted" data-ins="(" type="button">(</button>
+                  <button class="key muted" data-ins=")" type="button">)</button>
+                  <button class="key muted" data-ins="," type="button">,</button>
+                  <button class="key muted" data-ins="Ans" type="button">Ans</button>
+                  <button class="key muted" data-ins="π" type="button">π</button>
+
+                  <button class="key" data-fn="sin(" type="button">sin</button>
+                  <button class="key" data-fn="cos(" type="button">cos</button>
+                  <button class="key" data-fn="tan(" type="button">tan</button>
+                  <button class="key" data-fn="asin(" type="button">asin</button>
+                  <button class="key" data-fn="acos(" type="button">acos</button>
+
+                  <button class="key" data-fn="atan(" type="button">atan</button>
+                  <button class="key" data-fn="sinh(" type="button">sinh</button>
+                  <button class="key" data-fn="cosh(" type="button">cosh</button>
+                  <button class="key" data-fn="tanh(" type="button">tanh</button>
+                  <button class="key" data-fn="asinh(" type="button">asinh</button>
+
+                  <button class="key" data-fn="acosh(" type="button">acosh</button>
+                  <button class="key" data-fn="atanh(" type="button">atanh</button>
+                  <button class="key" data-fn="log(" type="button">log</button>
+                  <button class="key" data-fn="ln(" type="button">ln</button>
+                  <button class="key" data-fn="exp(" type="button">exp</button>
+
+                  <button class="key" data-fn="sqrt(" type="button">√</button>
+                  <button class="key" data-fn="cbrt(" type="button">∛</button>
+                  <button class="key" data-fn="abs(" type="button">abs</button>
+                  <button class="key" data-fn="floor(" type="button">floor</button>
+                  <button class="key" data-fn="ceil(" type="button">ceil</button>
+
+                  <button class="key" data-fn="round(" type="button">round</button>
+                  <button class="key" data-fn="min(" type="button">min</button>
+                  <button class="key" data-fn="max(" type="button">max</button>
+                  <button class="key" data-fn="nCr(" type="button">nCr</button>
+                  <button class="key" data-fn="nPr(" type="button">nPr</button>
+
+                  <button class="key muted" data-ins="e" type="button">e</button>
+                  <button class="key muted" data-fn="rand(" type="button">rand</button>
+                  <button class="key muted" data-fn="mod(" type="button">mod</button>
+                  <button class="key muted" data-fn="pow(" type="button">pow</button>
+                  <button class="key muted" data-fn="clamp(" type="button">clamp</button>
+                </div>
+              </div>
+
+              <div class="subpanel">
+                <div class="panelHead" style="padding:0 0 10px 0; border:0; background:transparent;">
+                  <div class="title">Input</div>
+                  <div class="hint">Postfix: <span class="kbd">!</span> factorial • <span class="kbd">%</span> percent</div>
+                </div>
+
+                <div class="grid ops" style="margin-bottom:10px;">
+                  <button class="key danger" id="acBtn" type="button">AC</button>
+                  <button class="key" id="delBtn" type="button">DEL</button>
+                  <button class="key muted" data-ins="%" type="button">%</button>
+                  <button class="key accent" data-ins="^" type="button">xʸ</button>
+
+                  <button class="key muted" data-ins="!" type="button">x!</button>
+                  <button class="key muted" data-ins="EE" type="button">EE</button>
+                  <button class="key muted" data-ins="1/(" type="button" title="Reciprocal: 1/(x)">1/x</button>
+                  <button class="key muted" id="pmBtn" type="button">±</button>
+                </div>
+
+                <div class="grid num">
+                  <button class="key muted" id="mcBtn" type="button">MC</button>
+                  <button class="key muted" id="mrBtn" type="button">MR</button>
+                  <button class="key muted" id="msBtn" type="button">MS</button>
+                  <button class="key muted" id="mPlusBtn" type="button">M+</button>
+
+                  <button class="key" data-ins="7" type="button">7</button>
+                  <button class="key" data-ins="8" type="button">8</button>
+                  <button class="key" data-ins="9" type="button">9</button>
+                  <button class="key accent" data-ins="/" type="button">÷</button>
+
+                  <button class="key" data-ins="4" type="button">4</button>
+                  <button class="key" data-ins="5" type="button">5</button>
+                  <button class="key" data-ins="6" type="button">6</button>
+                  <button class="key accent" data-ins="*" type="button">×</button>
+
+                  <button class="key" data-ins="1" type="button">1</button>
+                  <button class="key" data-ins="2" type="button">2</button>
+                  <button class="key" data-ins="3" type="button">3</button>
+                  <button class="key accent" data-ins="-" type="button">−</button>
+
+                  <button class="key wide" data-ins="0" type="button">0</button>
+                  <button class="key" data-ins="." type="button">.</button>
+                  <button class="key accent" data-ins="+" type="button">+</button>
+
+                  <button class="key good wide" id="equalsBtn" type="button">=</button>
+                  <button class="key muted" id="mMinusBtn" type="button">M-</button>
+                  <button class="key muted" id="clearHistBtn" type="button">Clear History</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">History</div>
+              <div class="hint">Click an item to reuse it</div>
+            </div>
+            <div class="hList" id="histList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BMI -->
+      <div class="content hidden" id="viewBmi">
+        <div class="grid2">
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">BMI & Weight</div>
+              <div class="hint">Height + weight → BMI and weight targets</div>
+            </div>
+
+            <div class="stack">
+              <div class="formRow">
+                <div>
+                  <label for="heightUnit">Height unit</label>
+                  <select id="heightUnit">
+                    <option value="cm" selected>Centimeters (cm)</option>
+                    <option value="m">Meters (m)</option>
+                    <option value="ftin">Feet + inches (ft/in)</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="weightUnit">Weight unit</label>
+                  <select id="weightUnit">
+                    <option value="kg" selected>Kilograms (kg)</option>
+                    <option value="lb">Pounds (lb)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="formRow" id="heightRowMetric">
+                <div>
+                  <label for="heightValue">Height</label>
+                  <input id="heightValue" type="number" inputmode="decimal" placeholder="e.g., 172" />
+                </div>
+                <div>
+                  <label for="weightValue">Weight</label>
+                  <input id="weightValue" type="number" inputmode="decimal" placeholder="e.g., 68" />
+                </div>
+              </div>
+
+              <div class="formRow hidden" id="heightRowFtin">
+                <div>
+                  <label for="heightFt">Height (feet)</label>
+                  <input id="heightFt" type="number" inputmode="numeric" placeholder="e.g., 5" />
+                </div>
+                <div>
+                  <label for="heightIn">Height (inches)</label>
+                  <input id="heightIn" type="number" inputmode="numeric" placeholder="e.g., 8" />
+                </div>
+              </div>
+
+              <div class="formRow">
+                <div>
+                  <label for="targetBmi">Target BMI (optional)</label>
+                  <input id="targetBmi" type="number" inputmode="decimal" placeholder="e.g., 22" />
+                </div>
+                <div>
+                  <label>&nbsp;</label>
+                  <button class="key good" id="bmiCalcBtn" type="button" style="width:100%;">Calculate</button>
+                </div>
+              </div>
+
+              <div class="kpi">
+                <div class="big" id="bmiOut">BMI: —</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <span class="pillTag" id="bmiTag">Category: —</span>
+                  <span class="pillTag" id="bmiRangeTag">Healthy range: —</span>
+                </div>
+                <div class="small" id="bmiDetails">
+                  Enter your height and weight. This is a screening metric, not a diagnosis.
+                </div>
+              </div>
+
+              <div class="kpi" style="background: linear-gradient(180deg, rgba(22,163,74,.06), rgba(255,255,255,0));">
+                <div class="big" id="targetWeightOut">Target weight: —</div>
+                <div class="small" id="targetWeightDetails">
+                  If you set a target BMI, this shows the weight you’d need for your height.
+                </div>
+              </div>
+
+              <div class="note">
+                BMI categories (adults): Underweight &lt; 18.5, Healthy 18.5–24.9, Overweight 25–29.9, Obesity ≥ 30.
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Quick weight helpers</div>
+              <div class="hint">Based on your height</div>
+            </div>
+
+            <div class="stack">
+              <div class="kpi">
+                <div class="big" id="idealMidOut">BMI 22 weight: —</div>
+                <div class="small" id="idealMidDetails">A simple midpoint target (BMI 22). You can adjust with Target BMI above.</div>
+              </div>
+
+              <div class="kpi">
+                <div class="big" id="deltaOut">To reach healthy range: —</div>
+                <div class="small" id="deltaDetails">Shows how far you are from the 18.5–24.9 weight range.</div>
+              </div>
+
+              <div class="note">
+                If you’re athletic, pregnant, or still growing, BMI can mislead. If you want, I can add body fat %, waist/height, and BMR.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONVERTER -->
+      <div class="content hidden" id="viewConv">
+        <div class="grid2">
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Unit converter</div>
+              <div class="hint">Length, mass, and time</div>
+            </div>
+
+            <div class="stack">
+              <div class="panel" style="box-shadow:none;">
+                <div class="panelHead">
+                  <div class="title">Length</div>
+                  <div class="hint">Base = meter</div>
+                </div>
+                <div class="stack">
+                  <div class="formRow">
+                    <div>
+                      <label for="lenVal">Value</label>
+                      <input id="lenVal" type="number" inputmode="decimal" placeholder="e.g., 12.5" />
+                    </div>
+                    <div>
+                      <label for="lenFrom">From</label>
+                      <select id="lenFrom"></select>
+                    </div>
+                  </div>
+                  <div class="formRow">
+                    <div>
+                      <label for="lenTo">To</label>
+                      <select id="lenTo"></select>
+                    </div>
+                    <div>
+                      <label for="lenOut">Result</label>
+                      <input id="lenOut" type="text" readonly />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel" style="box-shadow:none;">
+                <div class="panelHead">
+                  <div class="title">Mass</div>
+                  <div class="hint">Base = kilogram</div>
+                </div>
+                <div class="stack">
+                  <div class="formRow">
+                    <div>
+                      <label for="massVal">Value</label>
+                      <input id="massVal" type="number" inputmode="decimal" placeholder="e.g., 70" />
+                    </div>
+                    <div>
+                      <label for="massFrom">From</label>
+                      <select id="massFrom"></select>
+                    </div>
+                  </div>
+                  <div class="formRow">
+                    <div>
+                      <label for="massTo">To</label>
+                      <select id="massTo"></select>
+                    </div>
+                    <div>
+                      <label for="massOut">Result</label>
+                      <input id="massOut" type="text" readonly />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel" style="box-shadow:none;">
+                <div class="panelHead">
+                  <div class="title">Time</div>
+                  <div class="hint">Base = second</div>
+                </div>
+                <div class="stack">
+                  <div class="formRow">
+                    <div>
+                      <label for="timeVal">Value</label>
+                      <input id="timeVal" type="number" inputmode="decimal" placeholder="e.g., 90" />
+                    </div>
+                    <div>
+                      <label for="timeFrom">From</label>
+                      <select id="timeFrom"></select>
+                    </div>
+                  </div>
+                  <div class="formRow">
+                    <div>
+                      <label for="timeTo">To</label>
+                      <select id="timeTo"></select>
+                    </div>
+                    <div>
+                      <label for="timeOut">Result</label>
+                      <input id="timeOut" type="text" readonly />
+                    </div>
+                  </div>
+                  <div class="note">
+                    Note: “year” here is fixed at 365 days (for clean conversion).
+                  </div>
+                </div>
+              </div>
+
+              <div class="note">
+                Tip: you can type numbers normally (decimals allowed). The result updates as you change fields.
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Common shortcuts</div>
+              <div class="hint">Examples</div>
+            </div>
+            <div class="stack">
+              <div class="kpi">
+                <div class="big">Length</div>
+                <div class="small">km → mi, m → ft, cm → in</div>
+              </div>
+              <div class="kpi">
+                <div class="big">Mass</div>
+                <div class="small">kg → lb, g → oz, lb → kg</div>
+              </div>
+              <div class="kpi">
+                <div class="big">Time</div>
+                <div class="small">sec → min, min → hr, day → hr</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>
+          Scientific: implicit multiplication works (<span class="kbd">2π</span>, <span class="kbd">2(3+4)</span>).
+          Percent is postfix (<span class="kbd">50%</span> = 0.5). Factorial needs integers.
+        </div>
+        <div>
+          Keys: <span class="kbd">Enter</span> = • <span class="kbd">Backspace</span> del • <span class="kbd">Esc</span> clear
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  /* ===========================
+     Tabs
+     =========================== */
+  const tabCalc = document.getElementById("tabCalc");
+  const tabBmi  = document.getElementById("tabBmi");
+  const tabConv = document.getElementById("tabConv");
+
+  const viewCalc = document.getElementById("viewCalc");
+  const viewBmi  = document.getElementById("viewBmi");
+  const viewConv = document.getElementById("viewConv");
+  const calcControls = document.getElementById("calcControls");
+
+  function setTab(which){
+    [tabCalc, tabBmi, tabConv].forEach(x => x.classList.remove("active"));
+    [viewCalc, viewBmi, viewConv].forEach(x => x.classList.add("hidden"));
+
+    if (which === "calc"){
+      tabCalc.classList.add("active");
+      viewCalc.classList.remove("hidden");
+      calcControls.classList.remove("hidden");
+    } else if (which === "bmi"){
+      tabBmi.classList.add("active");
+      viewBmi.classList.remove("hidden");
+      calcControls.classList.add("hidden");
+    } else {
+      tabConv.classList.add("active");
+      viewConv.classList.remove("hidden");
+      calcControls.classList.add("hidden");
+    }
+  }
+  tabCalc.addEventListener("click", () => setTab("calc"));
+  tabBmi.addEventListener("click", () => setTab("bmi"));
+  tabConv.addEventListener("click", () => setTab("conv"));
+
+  /* ===========================
+     Scientific calculator (safe parser)
+     =========================== */
+  let expr = "";
+  let lastResult = 0;
+  let memory = 0;
+  let angleMode = "RAD";
+  const history = [];
+
+  const exprOut = document.getElementById("exprOut");
+  const resOut  = document.getElementById("resOut");
+  const histList = document.getElementById("histList");
+  const ansLabel = document.getElementById("ansLabel");
+  const memLabel = document.getElementById("memLabel");
+
+  const radBtn = document.getElementById("radBtn");
+  const degBtn = document.getElementById("degBtn");
+
+  function isFiniteNumber(x){ return typeof x === "number" && Number.isFinite(x); }
+  function formatNumber(x){
+    if (!isFiniteNumber(x)) return String(x);
+    if (Object.is(x, -0)) x = 0;
+    const ax = Math.abs(x);
+    if ((ax !== 0 && ax < 1e-9) || ax >= 1e12){
+      return x.toExponential(12).replace(/(?:\.0+|(\.\d+?)0+)e/, "$1e");
+    }
+    let s = x.toPrecision(15);
+    if (s.includes("e")) return s.replace(/(?:\.0+|(\.\d+?)0+)e/, "$1e");
+    s = s.replace(/(\.\d+?)0+$/,"$1").replace(/\.0$/,"");
+    return s;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function setDisplay(){
+    exprOut.textContent = expr || " ";
+    resOut.textContent  = formatNumber(lastResult);
+    ansLabel.textContent = formatNumber(lastResult);
+    memLabel.textContent = formatNumber(memory);
+
+    if (angleMode === "RAD"){
+      radBtn.classList.add("active"); degBtn.classList.remove("active");
+    } else {
+      degBtn.classList.add("active"); radBtn.classList.remove("active");
+    }
+  }
+
+  function renderHistory(){
+    histList.innerHTML = "";
+    if (history.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "hItem";
+      empty.style.opacity = .92;
+      empty.innerHTML = `<div class="hExpr">No calculations yet.</div>
+                         <div class="hRes">Try: sin(30) • log(1000) • nCr(10,3) • (5+3)!/8</div>`;
+      empty.onclick = () => { expr = "sin(30)"; setDisplay(); };
+      histList.appendChild(empty);
+      return;
+    }
+    history.forEach(h => {
+      const item = document.createElement("div");
+      item.className = "hItem";
+      item.innerHTML = `<div class="hExpr">${escapeHtml(h.expr)}</div>
+                        <div class="hRes">${escapeHtml(formatNumber(h.res))}</div>`;
+      item.onclick = () => { expr = h.expr; setDisplay(); };
+      histList.appendChild(item);
+    });
+  }
+
+  function pushHistory(e, r){
+    history.unshift({expr:e, res:r});
+    if (history.length > 80) history.pop();
+    renderHistory();
+  }
+
+  // Input helpers (implicit multiplication)
+  function lastChar(){ return expr.length ? expr[expr.length - 1] : ""; }
+  function isDigit(ch){ return ch >= "0" && ch <= "9"; }
+  function isLetter(ch){ return /[a-zA-Zπ]/.test(ch); }
+
+  function needsImplicitMul(nextToken){
+    if (!expr) return false;
+    const a = lastChar();
+    const leftIsValue =
+      isDigit(a) || a === "." || a === ")" || a === "π" || a === "e" ||
+      a === "!" || a === "%" || /[a-zA-Z]$/.test(a);
+    const rightStartsValue =
+      isDigit(nextToken[0]) || nextToken[0] === "." || nextToken[0] === "(" || isLetter(nextToken[0]);
+    const leftIsOperator = /[+\-*/^,(]/.test(a);
+    return leftIsValue && rightStartsValue && !leftIsOperator;
+  }
+
+  function insertText(t){
+    if (t === "EE") t = "e"; // exponent marker: 1e-3
+
+    if (t === "1/("){
+      if (needsImplicitMul("1")) expr += "*";
+      expr += "1/(";
+      setDisplay();
+      return;
+    }
+    if (t === "π"){
+      if (needsImplicitMul("π")) expr += "*";
+      expr += "π";
+      setDisplay();
+      return;
+    }
+    if (t === "Ans"){
+      if (needsImplicitMul("Ans")) expr += "*";
+      expr += "Ans";
+      setDisplay();
+      return;
+    }
+    if (t === "e"){
+      if (needsImplicitMul("e")) expr += "*";
+      expr += "e";
+      setDisplay();
+      return;
+    }
+
+    if (needsImplicitMul(t)) expr += "*";
+    expr += t;
+    setDisplay();
+  }
+
+  function insertFunction(fn){
+    if (needsImplicitMul(fn)) expr += "*";
+    expr += fn;
+    setDisplay();
+  }
+
+  function backspace(){
+    if (!expr) return;
+    expr = expr.slice(0, -1);
+    setDisplay();
+  }
+
+  function clearAll(){
+    expr = "";
+    lastResult = 0;
+    setDisplay();
+  }
+
+  function toggleSign(){
+    if (!expr){
+      expr = "-";
+      setDisplay();
+      return;
+    }
+    const m = expr.match(/(.*?)(\bAns\b|\bpi\b|\bπ\b|\be\b|(\d+(\.\d*)?|\.\d+)([eE][+\-]?\d+)?|\))$/i);
+    if (!m){
+      expr += "-";
+      setDisplay();
+      return;
+    }
+    const head = m[1];
+    const tail = m[2];
+    const undo = expr.match(/(.*)\(-([^)]+)\)$/);
+    expr = undo ? (undo[1] + undo[2]) : (head + "(-" + tail + ")");
+    setDisplay();
+  }
+
+  // Tokenizer + Shunting-yard (safe)
+  const TOK = { NUMBER:"NUMBER", IDENT:"IDENT", OP:"OP", LP:"LP", RP:"RP", COMMA:"COMMA", POSTFIX:"POSTFIX" };
+
+  function normalizeInput(s){
+    return s
+      .replace(/÷/g,"/")
+      .replace(/×/g,"*")
+      .replace(/−/g,"-")
+      .replace(/π/g,"pi")
+      .replace(/\s+/g,"");
+  }
+
+  function tokenize(s){
+    s = normalizeInput(s);
+    const tokens = [];
+    let i = 0;
+
+    const isAlpha = (c) => /[a-zA-Z_]/.test(c);
+    const isNumStart = (c) => /[0-9.]/.test(c);
+
+    while (i < s.length){
+      const c = s[i];
+
+      if (c === "("){ tokens.push({t:TOK.LP, v:"("}); i++; continue; }
+      if (c === ")"){ tokens.push({t:TOK.RP, v:")"}); i++; continue; }
+      if (c === ","){ tokens.push({t:TOK.COMMA, v:","}); i++; continue; }
+
+      if (c === "!" || c === "%"){ tokens.push({t:TOK.POSTFIX, v:c}); i++; continue; }
+      if ("+-*/^".includes(c)){ tokens.push({t:TOK.OP, v:c}); i++; continue; }
+
+      if (isNumStart(c)){
+        const m = s.slice(i).match(/^((\d+(\.\d*)?)|(\.\d+))([eE][+\-]?\d+)?/);
+        if (!m) throw new Error("Invalid number near: " + s.slice(i, i+10));
+        tokens.push({t:TOK.NUMBER, v:m[0]});
+        i += m[0].length;
+        continue;
+      }
+
+      if (isAlpha(c)){
+        const m = s.slice(i).match(/^([a-zA-Z_][a-zA-Z_0-9]*)/);
+        tokens.push({t:TOK.IDENT, v:m[1]});
+        i += m[1].length;
+        continue;
+      }
+
+      throw new Error("Unexpected character: " + c);
+    }
+
+    return tokens;
+  }
+
+  const OPS = {
+    "+": {prec:1, assoc:"L", arity:2},
+    "-": {prec:1, assoc:"L", arity:2},
+    "*": {prec:2, assoc:"L", arity:2},
+    "/": {prec:2, assoc:"L", arity:2},
+    "^": {prec:4, assoc:"R", arity:2},
+    "NEG": {prec:3, assoc:"R", arity:1},
+    "POS": {prec:3, assoc:"R", arity:1}
+  };
+
+  function toRPN(tokens){
+    const out = [];
+    const stack = [];
+    let prev = null;
+
+    for (let idx=0; idx<tokens.length; idx++){
+      const tok = tokens[idx];
+
+      if (tok.t === TOK.NUMBER){
+        out.push(tok);
+
+      } else if (tok.t === TOK.IDENT){
+        const next = tokens[idx+1];
+        if (next && next.t === TOK.LP) stack.push({t:"FUNC", v:tok.v});
+        else out.push(tok);
+
+      } else if (tok.t === TOK.COMMA){
+        while (stack.length && stack[stack.length-1].t !== TOK.LP) out.push(stack.pop());
+        if (!stack.length) throw new Error("Misplaced comma");
+
+      } else if (tok.t === TOK.LP){
+        stack.push(tok);
+
+      } else if (tok.t === TOK.RP){
+        while (stack.length && stack[stack.length-1].t !== TOK.LP) out.push(stack.pop());
+        if (!stack.length) throw new Error("Mismatched parentheses");
+        stack.pop();
+        if (stack.length && stack[stack.length-1].t === "FUNC") out.push(stack.pop());
+
+      } else if (tok.t === TOK.POSTFIX){
+        out.push(tok);
+
+      } else if (tok.t === TOK.OP){
+        let op = tok.v;
+        const prevIsNone = !prev;
+        const prevIsOp = prev && (prev.t === TOK.OP || prev.t === TOK.LP || prev.t === TOK.COMMA);
+        if ((op === "-" || op === "+") && (prevIsNone || prevIsOp)) op = (op === "-") ? "NEG" : "POS";
+
+        const o1 = OPS[op];
+        if (!o1) throw new Error("Unknown operator: " + op);
+
+        while (stack.length){
+          const top = stack[stack.length-1];
+          if (top.t !== TOK.OP) break;
+          const o2 = OPS[top.v];
+          if (!o2) break;
+
+          const condLeft  = (o1.assoc === "L" && o1.prec <= o2.prec);
+          const condRight = (o1.assoc === "R" && o1.prec <  o2.prec);
+          if (condLeft || condRight) out.push(stack.pop());
+          else break;
+        }
+        stack.push({t:TOK.OP, v:op});
+      }
+
+      prev = tok;
+    }
+
+    while (stack.length){
+      const x = stack.pop();
+      if (x.t === TOK.LP || x.t === TOK.RP) throw new Error("Mismatched parentheses");
+      out.push(x);
+    }
+    return out;
+  }
+
+  function factInt(n){
+    if (!Number.isFinite(n)) throw new Error("Factorial of non-finite value");
+    if (Math.floor(n) !== n) throw new Error("Factorial needs an integer");
+    if (n < 0) throw new Error("Factorial needs non-negative integer");
+    if (n > 170) return Infinity;
+    let r = 1;
+    for (let i=2; i<=n; i++) r *= i;
+    return r;
+  }
+
+  function nCr(n, r){
+    if (!Number.isFinite(n) || !Number.isFinite(r)) throw new Error("nCr expects numbers");
+    n = Math.round(n); r = Math.round(r);
+    if (n < 0 || r < 0 || r > n) throw new Error("nCr requires 0 ≤ r ≤ n");
+    r = Math.min(r, n-r);
+    let num=1, den=1;
+    for (let k=1; k<=r; k++){ num *= (n - (r - k)); den *= k; }
+    return num / den;
+  }
+
+  function nPr(n, r){
+    if (!Number.isFinite(n) || !Number.isFinite(r)) throw new Error("nPr expects numbers");
+    n = Math.round(n); r = Math.round(r);
+    if (n < 0 || r < 0 || r > n) throw new Error("nPr requires 0 ≤ r ≤ n");
+    let res=1;
+    for (let k=0; k<r; k++) res *= (n - k);
+    return res;
+  }
+
+  function degToRad(x){ return x * Math.PI / 180; }
+  function radToDeg(x){ return x * 180 / Math.PI; }
+
+  const FUNCS = {
+    sin:  (x) => Math.sin(angleMode === "DEG" ? degToRad(x) : x),
+    cos:  (x) => Math.cos(angleMode === "DEG" ? degToRad(x) : x),
+    tan:  (x) => Math.tan(angleMode === "DEG" ? degToRad(x) : x),
+
+    asin: (x) => angleMode === "DEG" ? radToDeg(Math.asin(x)) : Math.asin(x),
+    acos: (x) => angleMode === "DEG" ? radToDeg(Math.acos(x)) : Math.acos(x),
+    atan: (x) => angleMode === "DEG" ? radToDeg(Math.atan(x)) : Math.atan(x),
+
+    sinh: (x) => Math.sinh(x),
+    cosh: (x) => Math.cosh(x),
+    tanh: (x) => Math.tanh(x),
+    asinh:(x) => Math.asinh(x),
+    acosh:(x) => Math.acosh(x),
+    atanh:(x) => Math.atanh(x),
+
+    log:  (x) => Math.log10(x),
+    ln:   (x) => Math.log(x),
+    exp:  (x) => Math.exp(x),
+    sqrt: (x) => Math.sqrt(x),
+    cbrt: (x) => Math.cbrt(x),
+
+    abs:  (x) => Math.abs(x),
+    floor:(x) => Math.floor(x),
+    ceil: (x) => Math.ceil(x),
+    round:(x) => Math.round(x),
+
+    // extra helpers
+    pow:  (a,b) => Math.pow(a,b),
+    mod:  (a,b) => ((a % b) + b) % b,
+    min:  (a,b) => Math.min(a,b),
+    max:  (a,b) => Math.max(a,b),
+    clamp:(x,a,b) => Math.min(Math.max(x, a), b),
+
+    rand: () => Math.random(),
+    nCr:  (n,r) => nCr(n,r),
+    nPr:  (n,r) => nPr(n,r),
+  };
+
+  function evalRPN(rpn){
+    const st = [];
+    const getConst = (name) => {
+      const n = name.toLowerCase();
+      if (n === "pi") return Math.PI;
+      if (n === "e")  return Math.E;
+      if (n === "ans")return lastResult;
+      throw new Error("Unknown identifier: " + name);
+    };
+
+    for (const tok of rpn){
+      if (tok.t === TOK.NUMBER){
+        st.push(Number(tok.v));
+
+      } else if (tok.t === TOK.IDENT){
+        st.push(getConst(tok.v));
+
+      } else if (tok.t === TOK.POSTFIX){
+        if (st.length < 1) throw new Error("Missing value for postfix " + tok.v);
+        const a = st.pop();
+        if (tok.v === "!") st.push(factInt(a));
+        else if (tok.v === "%") st.push(a / 100);
+        else throw new Error("Unknown postfix: " + tok.v);
+
+      } else if (tok.t === TOK.OP){
+        const meta = OPS[tok.v];
+        if (!meta) throw new Error("Unknown operator: " + tok.v);
+
+        if (meta.arity === 1){
+          if (st.length < 1) throw new Error("Missing operand");
+          const a = st.pop();
+          st.push(tok.v === "NEG" ? -a : +a);
+        } else {
+          if (st.length < 2) throw new Error("Missing operands");
+          const b = st.pop(), a = st.pop();
+          switch (tok.v){
+            case "+": st.push(a + b); break;
+            case "-": st.push(a - b); break;
+            case "*": st.push(a * b); break;
+            case "/": st.push(a / b); break;
+            case "^": st.push(Math.pow(a, b)); break;
+            default: throw new Error("Bad operator");
+          }
+        }
+
+      } else if (tok.t === "FUNC"){
+        const fn = FUNCS[tok.v];
+        if (!fn) throw new Error("Unknown function: " + tok.v);
+
+        const argc = fn.length;  // rand() -> 0, most -> 1, some -> 2 or 3
+        if (argc === 0){
+          st.push(fn());
+        } else {
+          if (st.length < argc) throw new Error("Not enough arguments for " + tok.v);
+          const args = st.splice(st.length - argc, argc);
+          st.push(fn(...args));
+        }
+      } else {
+        throw new Error("Bad token");
+      }
+    }
+
+    if (st.length !== 1) throw new Error("Invalid expression");
+    return st[0];
+  }
+
+  function evaluateExpression(s){
+    if (!s || !s.trim()) return lastResult;
+    const toks = tokenize(s);
+    const rpn  = toRPN(toks);
+    return evalRPN(rpn);
+  }
+
+  function doEval(){
+    try{
+      const v = evaluateExpression(expr);
+      pushHistory(expr || "0", v);
+      lastResult = v;
+      setDisplay();
+    } catch (e){
+      resOut.textContent = "Error";
+      exprOut.textContent = (expr || " ") + "\n" + "⚠ " + String(e.message || e);
+      setTimeout(setDisplay, 1400);
+    }
+  }
+
+  async function copyResult(){
+    try{
+      await navigator.clipboard.writeText(formatNumber(lastResult));
+      const btn = document.getElementById("copyBtn");
+      const old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => btn.textContent = old, 850);
+    } catch {}
+  }
+
+  // Bind keypad
+  document.querySelectorAll("button.key[data-ins]").forEach(btn => {
+    btn.addEventListener("click", () => insertText(btn.getAttribute("data-ins")));
+  });
+  document.querySelectorAll("button.key[data-fn]").forEach(btn => {
+    btn.addEventListener("click", () => insertFunction(btn.getAttribute("data-fn")));
+  });
+
+  document.getElementById("equalsBtn").addEventListener("click", doEval);
+  document.getElementById("evalBtn").addEventListener("click", doEval);
+  document.getElementById("copyBtn").addEventListener("click", copyResult);
+  document.getElementById("useAnsBtn").addEventListener("click", () => insertText("Ans"));
+
+  document.getElementById("acBtn").addEventListener("click", clearAll);
+  document.getElementById("delBtn").addEventListener("click", backspace);
+  document.getElementById("pmBtn").addEventListener("click", toggleSign);
+
+  document.getElementById("clearHistBtn").addEventListener("click", () => { history.length = 0; renderHistory(); });
+
+  // Memory
+  document.getElementById("mcBtn").addEventListener("click", () => { memory = 0; setDisplay(); });
+  document.getElementById("mrBtn").addEventListener("click", () => { insertText(String(formatNumber(memory))); });
+  document.getElementById("msBtn").addEventListener("click", () => { memory = lastResult; setDisplay(); });
+  document.getElementById("mPlusBtn").addEventListener("click", () => { memory += lastResult; setDisplay(); });
+  document.getElementById("mMinusBtn").addEventListener("click", () => { memory -= lastResult; setDisplay(); });
+
+  // Angle mode
+  radBtn.addEventListener("click", () => { angleMode = "RAD"; setDisplay(); });
+  degBtn.addEventListener("click", () => { angleMode = "DEG"; setDisplay(); });
+
+  // Keyboard
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey) return;
+    const k = e.key;
+
+    if (k === "Enter"){ e.preventDefault(); doEval(); return; }
+    if (k === "Backspace"){ e.preventDefault(); backspace(); return; }
+    if (k === "Escape"){ e.preventDefault(); clearAll(); return; }
+
+    const allowed = "0123456789.+-*/^(),";
+    if (allowed.includes(k)){ insertText(k); return; }
+    if (k === "%"){ insertText("%"); return; }
+    if (k === "!"){ insertText("!"); return; }
+    if (k === "π"){ insertText("π"); return; }
+
+    if (/^[a-zA-Z]$/.test(k)){ insertText(k); return; }
+  });
+
+  // Init calculator
+  setDisplay();
+  renderHistory();
+
+  /* ===========================
+     BMI & Weight
+     =========================== */
+  const heightUnit = document.getElementById("heightUnit");
+  const weightUnit = document.getElementById("weightUnit");
+
+  const heightRowMetric = document.getElementById("heightRowMetric");
+  const heightRowFtin  = document.getElementById("heightRowFtin");
+
+  const heightValue = document.getElementById("heightValue");
+  const weightValue = document.getElementById("weightValue");
+
+  const heightFt = document.getElementById("heightFt");
+  const heightIn = document.getElementById("heightIn");
+  const targetBmi = document.getElementById("targetBmi");
+
+  const bmiOut = document.getElementById("bmiOut");
+  const bmiTag = document.getElementById("bmiTag");
+  const bmiRangeTag = document.getElementById("bmiRangeTag");
+  const bmiDetails = document.getElementById("bmiDetails");
+
+  const targetWeightOut = document.getElementById("targetWeightOut");
+  const targetWeightDetails = document.getElementById("targetWeightDetails");
+
+  const idealMidOut = document.getElementById("idealMidOut");
+  const idealMidDetails = document.getElementById("idealMidDetails");
+
+  const deltaOut = document.getElementById("deltaOut");
+  const deltaDetails = document.getElementById("deltaDetails");
+
+  function kgFromWeightInput(v, unit){
+    const x = Number(v);
+    if (!Number.isFinite(x)) return null;
+    if (unit === "kg") return x;
+    if (unit === "lb") return x * 0.45359237;
+    return null;
+  }
+
+  function weightToUnit(kg, unit){
+    if (!Number.isFinite(kg)) return null;
+    if (unit === "kg") return kg;
+    if (unit === "lb") return kg / 0.45359237;
+    return null;
+  }
+
+  function metersFromHeight(){
+    const u = heightUnit.value;
+
+    if (u === "cm"){
+      const x = Number(heightValue.value);
+      if (!Number.isFinite(x) || x <= 0) return null;
+      return x / 100;
+    }
+
+    if (u === "m"){
+      const x = Number(heightValue.value);
+      if (!Number.isFinite(x) || x <= 0) return null;
+      return x;
+    }
+
+    if (u === "ftin"){
+      const ft = Number(heightFt.value);
+      const inch = Number(heightIn.value);
+      if (!Number.isFinite(ft) || !Number.isFinite(inch) || ft < 0 || inch < 0) return null;
+      const totalIn = (ft * 12) + inch;
+      if (totalIn <= 0) return null;
+      return totalIn * 0.0254;
+    }
+
+    return null;
+  }
+
+  function bmiCategory(bmi){
+    if (bmi < 18.5) return {label:"Underweight", tone:"warn"};
+    if (bmi < 25)   return {label:"Healthy", tone:"ok"};
+    if (bmi < 30)   return {label:"Overweight", tone:"warn"};
+    return {label:"Obesity", tone:"bad"};
+  }
+
+  function fmt(x, digits=2){
+    if (!Number.isFinite(x)) return "—";
+    return x.toFixed(digits).replace(/\.00$/,"").replace(/(\.\d)0$/,"$1");
+  }
+
+  function calcBMI(){
+    const m = metersFromHeight();
+    const kg = kgFromWeightInput(weightValue.value, weightUnit.value);
+
+    if (!m || !kg){
+      bmiOut.textContent = "BMI: —";
+      bmiTag.textContent = "Category: —";
+      bmiTag.className = "pillTag";
+      bmiRangeTag.textContent = "Healthy range: —";
+      bmiDetails.textContent = "Enter your height and weight. This is a screening metric, not a diagnosis.";
+      targetWeightOut.textContent = "Target weight: —";
+      idealMidOut.textContent = "BMI 22 weight: —";
+      deltaOut.textContent = "To reach healthy range: —";
+      return;
+    }
+
+    const bmi = kg / (m*m);
+    const cat = bmiCategory(bmi);
+
+    const minKg = 18.5 * (m*m);
+    const maxKg = 24.9 * (m*m);
+
+    const minW = weightToUnit(minKg, weightUnit.value);
+    const maxW = weightToUnit(maxKg, weightUnit.value);
+
+    bmiOut.textContent = `BMI: ${fmt(bmi, 2)}`;
+    bmiTag.textContent = `Category: ${cat.label}`;
+    bmiTag.className = `pillTag ${cat.tone}`;
+
+    bmiRangeTag.textContent = `Healthy range: ${fmt(minW, 1)}–${fmt(maxW, 1)} ${weightUnit.value}`;
+    bmiRangeTag.className = "pillTag";
+
+    let msg = `At your height, a “healthy range” is roughly ${fmt(minW,1)}–${fmt(maxW,1)} ${weightUnit.value}.`;
+    if (bmi < 18.5) msg += " You are below that range.";
+    else if (bmi <= 24.9) msg += " You are within that range.";
+    else msg += " You are above that range.";
+    bmiDetails.textContent = msg;
+
+    // Target BMI
+    const tb = Number(targetBmi.value);
+    if (Number.isFinite(tb) && tb > 0){
+      const tKg = tb * (m*m);
+      const tW  = weightToUnit(tKg, weightUnit.value);
+      targetWeightOut.textContent = `Target weight: ${fmt(tW, 1)} ${weightUnit.value}`;
+      targetWeightDetails.textContent = `This is the weight that corresponds to BMI ${fmt(tb,1)} at your height.`;
+    } else {
+      targetWeightOut.textContent = "Target weight: —";
+      targetWeightDetails.textContent = "If you set a target BMI, this shows the weight you’d need for your height.";
+    }
+
+    // BMI 22 helper
+    const midKg = 22 * (m*m);
+    const midW  = weightToUnit(midKg, weightUnit.value);
+    idealMidOut.textContent = `BMI 22 weight: ${fmt(midW, 1)} ${weightUnit.value}`;
+    idealMidDetails.textContent = "BMI 22 is a common midpoint target (not a rule).";
+
+    // Delta helper
+    const currW = weightToUnit(kg, weightUnit.value);
+    const minWU = weightToUnit(minKg, weightUnit.value);
+    const maxWU = weightToUnit(maxKg, weightUnit.value);
+
+    let deltaText = "—";
+    let deltaMsg = "";
+    if (currW < minWU){
+      deltaText = `+${fmt(minWU - currW, 1)} ${weightUnit.value} to reach BMI 18.5`;
+      deltaMsg = "That’s the minimum gain to enter the healthy range.";
+    } else if (currW > maxWU){
+      deltaText = `-${fmt(currW - maxWU, 1)} ${weightUnit.value} to reach BMI 24.9`;
+      deltaMsg = "That’s the minimum reduction to enter the healthy range.";
+    } else {
+      deltaText = "You’re in the healthy range";
+      deltaMsg = "No change needed to stay within 18.5–24.9.";
+    }
+    deltaOut.textContent = `To reach healthy range: ${deltaText}`;
+    deltaDetails.textContent = deltaMsg;
+  }
+
+  function syncHeightUI(){
+    const u = heightUnit.value;
+    if (u === "ftin"){
+      heightRowMetric.classList.add("hidden");
+      heightRowFtin.classList.remove("hidden");
+    } else {
+      heightRowFtin.classList.add("hidden");
+      heightRowMetric.classList.remove("hidden");
+    }
+    calcBMI();
+  }
+
+  heightUnit.addEventListener("change", syncHeightUI);
+  weightUnit.addEventListener("change", calcBMI);
+  [heightValue, weightValue, heightFt, heightIn, targetBmi].forEach(el => {
+    el.addEventListener("input", () => calcBMI());
+  });
+  document.getElementById("bmiCalcBtn").addEventListener("click", calcBMI);
+
+  /* ===========================
+     Unit converter
+     =========================== */
+  const units = {
+    length: {
+      m: 1,
+      cm: 0.01,
+      mm: 0.001,
+      km: 1000,
+      in: 0.0254,
+      ft: 0.3048,
+      yd: 0.9144,
+      mi: 1609.344
+    },
+    mass: {
+      kg: 1,
+      g: 0.001,
+      mg: 0.000001,
+      lb: 0.45359237,
+      oz: 0.028349523125,
+      st: 6.35029318
+    },
+    time: {
+      s: 1,
+      ms: 0.001,
+      min: 60,
+      hr: 3600,
+      day: 86400,
+      week: 604800,
+      year: 31536000
+    }
+  };
+
+  function fillSelect(sel, map, preferred){
+    sel.innerHTML = "";
+    Object.keys(map).forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k;
+      sel.appendChild(opt);
+    });
+    if (preferred && map[preferred] != null) sel.value = preferred;
+  }
+
+  function convert(val, from, to, map){
+    const x = Number(val);
+    if (!Number.isFinite(x)) return "";
+    const f = map[from], t = map[to];
+    if (!Number.isFinite(f) || !Number.isFinite(t)) return "";
+    const base = x * f;
+    const out = base / t;
+
+    // friendly formatting (not too long)
+    const ax = Math.abs(out);
+    if (ax !== 0 && (ax < 1e-9 || ax >= 1e12)) return out.toExponential(10);
+    let s = out.toPrecision(12);
+    if (s.includes("e")) return s;
+    s = s.replace(/(\.\d+?)0+$/,"$1").replace(/\.0$/,"");
+    return s;
+  }
+
+  const lenVal = document.getElementById("lenVal");
+  const lenFrom = document.getElementById("lenFrom");
+  const lenTo = document.getElementById("lenTo");
+  const lenOut = document.getElementById("lenOut");
+
+  const massVal = document.getElementById("massVal");
+  const massFrom = document.getElementById("massFrom");
+  const massTo = document.getElementById("massTo");
+  const massOut = document.getElementById("massOut");
+
+  const timeVal = document.getElementById("timeVal");
+  const timeFrom = document.getElementById("timeFrom");
+  const timeTo = document.getElementById("timeTo");
+  const timeOut = document.getElementById("timeOut");
+
+  fillSelect(lenFrom, units.length, "m");
+  fillSelect(lenTo, units.length, "ft");
+
+  fillSelect(massFrom, units.mass, "kg");
+  fillSelect(massTo, units.mass, "lb");
+
+  fillSelect(timeFrom, units.time, "s");
+  fillSelect(timeTo, units.time, "min");
+
+  function updateConverters(){
+    lenOut.value  = convert(lenVal.value,  lenFrom.value,  lenTo.value,  units.length);
+    massOut.value = convert(massVal.value, massFrom.value, massTo.value, units.mass);
+    timeOut.value = convert(timeVal.value, timeFrom.value, timeTo.value, units.time);
+  }
+
+  [lenVal, lenFrom, lenTo, massVal, massFrom, massTo, timeVal, timeFrom, timeTo].forEach(el => {
+    el.addEventListener("input", updateConverters);
+    el.addEventListener("change", updateConverters);
+  });
+
+  // init BMI & converters
+  syncHeightUI();
+  updateConverters();
+})();
+</script>
+</body>
+</html>

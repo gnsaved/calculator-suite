@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BMI / Weight + Unit Converter (White/Black)</title>
+
+  <style>
+    /* Clean mono theme: white + black + quiet grays. No loud accents. */
+    :root{
+      --bg:#ffffff;
+      --text:#0b0d12;
+      --muted:#5b6473;
+      --muted2:#7a8496;
+
+      --card:#ffffff;
+      --line:rgba(15, 23, 42, .12);
+      --line2:rgba(15, 23, 42, .18);
+
+      --shadow: 0 18px 40px rgba(2, 6, 23, .08);
+      --shadow2: 0 10px 22px rgba(2, 6, 23, .06);
+
+      --r24:24px;
+      --r18:18px;
+      --r14:14px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background: var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(1100px, 100%);
+      display:grid;
+      gap:14px;
+    }
+
+    .shell{
+      border:1px solid var(--line);
+      border-radius: var(--r24);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .topbar{
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(2,6,23,.03), transparent 75%);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:14px;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(0,0,0,.08), rgba(0,0,0,0) 60%),
+        linear-gradient(135deg, rgba(0,0,0,.06), rgba(0,0,0,.02));
+    }
+    .brandText{ line-height:1.1; min-width:0; }
+    .brandText .name{
+      font-weight:950;
+      letter-spacing:.2px;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brandText .sub{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .tabBtn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.2px;
+      cursor:pointer;
+      transition:.12s ease;
+      user-select:none;
+    }
+    .tabBtn:hover{ border-color:var(--line2); color:var(--text); transform:translateY(-1px); }
+    .tabBtn.active{
+      background:#0b0d12;
+      color:#fff;
+      border-color:#0b0d12;
+      transform:none;
+    }
+
+    .content{ padding:16px; }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid2{ grid-template-columns:1fr; }
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius: var(--r18);
+      background:#fff;
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .panelHead{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: linear-gradient(180deg, rgba(2,6,23,.03), transparent 75%);
+    }
+    .panelHead .title{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.28px;
+      color:var(--muted);
+      font-weight:950;
+    }
+    .panelHead .hint{
+      font-size:12px;
+      color:var(--muted2);
+      font-family:var(--mono);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:70%;
+    }
+
+    .stack{ padding:14px; display:grid; gap:12px; }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:950;
+      letter-spacing:.15px;
+      margin-bottom:6px;
+    }
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius: var(--r14);
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+      transition:.12s ease;
+    }
+    input:focus, select:focus{
+      border-color: rgba(11,13,18,.45);
+      box-shadow: 0 0 0 4px rgba(11,13,18,.08);
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 720px){
+      .row2{ grid-template-columns:1fr; }
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:12px 12px;
+      border-radius: var(--r14);
+      font-size:13px;
+      font-weight:950;
+      cursor:pointer;
+      transition:.12s ease;
+      user-select:none;
+    }
+    .btn:hover{ border-color:var(--line2); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.992); }
+    .btn.primary{
+      background:#0b0d12;
+      border-color:#0b0d12;
+      color:#fff;
+    }
+
+    .kpi{
+      border:1px solid var(--line);
+      border-radius: var(--r18);
+      padding:12px;
+      background: #fff;
+      display:grid;
+      gap:6px;
+    }
+    .kpi .big{
+      font-family:var(--mono);
+      font-size:22px;
+      font-weight:950;
+    }
+    .kpi .small{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:7px 10px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:12px;
+      font-weight:950;
+      color:var(--muted);
+    }
+    /* Keep it monochrome: just different fills */
+    .pill.good{ background: rgba(11,13,18,.06); color: var(--text); border-color: rgba(11,13,18,.18); }
+    .pill.warn{ background: rgba(11,13,18,.04); color: var(--text); border-color: rgba(11,13,18,.14); }
+    .pill.bad { background: rgba(11,13,18,.08); color: var(--text); border-color: rgba(11,13,18,.22); }
+
+    .note{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    .mono{ font-family:var(--mono); }
+
+    .hidden{ display:none !important; }
+
+    .splitLine{
+      height:1px;
+      background: var(--line);
+      margin: 2px 0;
+    }
+
+    .footer{
+      padding:12px 16px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      background:#fff;
+    }
+
+    .kbd{
+      font-family:var(--mono);
+      border:1px solid var(--line);
+      padding:2px 6px;
+      border-radius:10px;
+      background:#fff;
+      color:var(--text);
+      font-size:11px;
+      font-weight:950;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brandText">
+            <div class="name">Health + Conversions</div>
+            <div class="sub">BMI / weight targets • length, mass, time conversions</div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tabBtn active" id="tabBmi" type="button">BMI & Weight</button>
+          <button class="tabBtn" id="tabConv" type="button">Unit Converter</button>
+        </div>
+      </div>
+
+      <!-- BMI / WEIGHT VIEW -->
+      <div class="content" id="viewBmi">
+        <div class="grid2">
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">BMI inputs</div>
+              <div class="hint">Height + weight → BMI</div>
+            </div>
+
+            <div class="stack">
+              <div class="row2">
+                <div>
+                  <label for="heightUnit">Height unit</label>
+                  <select id="heightUnit">
+                    <option value="cm" selected>Centimeters (cm)</option>
+                    <option value="m">Meters (m)</option>
+                    <option value="ftin">Feet + inches (ft/in)</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="weightUnit">Weight unit</label>
+                  <select id="weightUnit">
+                    <option value="kg" selected>Kilograms (kg)</option>
+                    <option value="lb">Pounds (lb)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Height/weight inputs -->
+              <div class="row2" id="rowMetric">
+                <div>
+                  <label for="heightValue">Height</label>
+                  <input id="heightValue" type="number" inputmode="decimal" placeholder="e.g., 172" />
+                </div>
+                <div>
+                  <label for="weightValue">Weight</label>
+                  <input id="weightValue" type="number" inputmode="decimal" placeholder="e.g., 68" />
+                </div>
+              </div>
+
+              <!-- Feet/inches only -->
+              <div class="row2 hidden" id="rowFtin">
+                <div>
+                  <label for="heightFt">Height (feet)</label>
+                  <input id="heightFt" type="number" inputmode="numeric" placeholder="e.g., 5" />
+                </div>
+                <div>
+                  <label for="heightIn">Height (inches)</label>
+                  <input id="heightIn" type="number" inputmode="numeric" placeholder="e.g., 8" />
+                </div>
+              </div>
+
+              <div class="row2">
+                <div>
+                  <label for="targetBmi">Target BMI (optional)</label>
+                  <input id="targetBmi" type="number" inputmode="decimal" placeholder="e.g., 22" />
+                </div>
+                <div style="display:grid; align-content:end;">
+                  <button class="btn primary" id="bmiCalcBtn" type="button">Calculate</button>
+                </div>
+              </div>
+
+              <div class="splitLine"></div>
+
+              <!-- Main BMI output -->
+              <div class="kpi">
+                <div class="big" id="bmiOut">BMI: —</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <span class="pill" id="catPill">Category: —</span>
+                  <span class="pill" id="rangePill">Healthy range: —</span>
+                </div>
+                <div class="small" id="bmiNarrative">
+                  Enter height and weight to calculate BMI and see a healthy weight range for your height.
+                </div>
+              </div>
+
+              <!-- Target weight -->
+              <div class="kpi">
+                <div class="big" id="targetWeightOut">Target weight: —</div>
+                <div class="small" id="targetWeightNote">
+                  If you enter a target BMI, this shows what weight that BMI corresponds to (for your height).
+                </div>
+              </div>
+
+              <div class="row2">
+                <button class="btn" id="copyBmiBtn" type="button">Copy summary</button>
+                <button class="btn" id="resetBmiBtn" type="button">Reset</button>
+              </div>
+
+              <div class="note">
+                Adult BMI categories: Underweight &lt; 18.5 • Healthy 18.5–24.9 • Overweight 25–29.9 • Obesity ≥ 30.
+                BMI is a screening tool, not a diagnosis.
+              </div>
+            </div>
+          </div>
+
+          <!-- Side: weight helpers -->
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Weight helpers</div>
+              <div class="hint">Based on your height</div>
+            </div>
+
+            <div class="stack">
+              <div class="kpi">
+                <div class="big" id="bmi22Out">BMI 22 weight: —</div>
+                <div class="small">
+                  A simple midpoint target that many people use as a reference (not a rule).
+                </div>
+              </div>
+
+              <div class="kpi">
+                <div class="big" id="deltaOut">To reach healthy range: —</div>
+                <div class="small" id="deltaNote">
+                  This shows the smallest change needed to enter the 18.5–24.9 range.
+                </div>
+              </div>
+
+              <div class="kpi">
+                <div class="big" id="rangeWeightsOut">Range weights: —</div>
+                <div class="small">
+                  The weight span for BMI 18.5 (lower edge) and BMI 24.9 (upper edge) at your height.
+                </div>
+              </div>
+
+              <div class="note">
+                If you want extra options later: waist-to-height ratio, BMR (calories), and metric/imperial toggles can be added cleanly.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONVERTER VIEW -->
+      <div class="content hidden" id="viewConv">
+        <div class="grid2">
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Unit converter</div>
+              <div class="hint">Length, mass, time</div>
+            </div>
+
+            <div class="stack">
+              <div class="row2">
+                <div>
+                  <label for="convKind">Category</label>
+                  <select id="convKind">
+                    <option value="length" selected>Length</option>
+                    <option value="mass">Mass</option>
+                    <option value="time">Time</option>
+                  </select>
+                </div>
+                <div style="display:grid; align-content:end;">
+                  <button class="btn" id="swapBtn" type="button">Swap units</button>
+                </div>
+              </div>
+
+              <div class="row2">
+                <div>
+                  <label for="convVal">Value</label>
+                  <input id="convVal" type="number" inputmode="decimal" placeholder="e.g., 12.5" />
+                </div>
+                <div>
+                  <label for="convFrom">From</label>
+                  <select id="convFrom"></select>
+                </div>
+              </div>
+
+              <div class="row2">
+                <div>
+                  <label for="convTo">To</label>
+                  <select id="convTo"></select>
+                </div>
+                <div>
+                  <label for="convOut">Result</label>
+                  <input id="convOut" type="text" readonly />
+                </div>
+              </div>
+
+              <div class="row2">
+                <button class="btn" id="copyConvBtn" type="button">Copy result</button>
+                <button class="btn" id="resetConvBtn" type="button">Reset</button>
+              </div>
+
+              <div class="kpi">
+                <div class="big mono" id="convFormula">—</div>
+                <div class="small" id="convNote">
+                  Internally everything is converted through a base unit (meters / kilograms / seconds) to keep it consistent.
+                </div>
+              </div>
+
+              <div class="note" id="timeNote">
+                Note for time: “month” uses 30 days and “year” uses 365 days (fixed values).
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panelHead">
+              <div class="title">Quick picks</div>
+              <div class="hint">Common pairs</div>
+            </div>
+
+            <div class="stack">
+              <button class="btn" type="button" data-quick="length|km|mi|1">Length: 1 km → mi</button>
+              <button class="btn" type="button" data-quick="length|m|ft|1">Length: 1 m → ft</button>
+              <button class="btn" type="button" data-quick="length|cm|in|30">Length: 30 cm → in</button>
+
+              <button class="btn" type="button" data-quick="mass|kg|lb|70">Mass: 70 kg → lb</button>
+              <button class="btn" type="button" data-quick="mass|g|oz|250">Mass: 250 g → oz</button>
+              <button class="btn" type="button" data-quick="mass|lb|kg|180">Mass: 180 lb → kg</button>
+
+              <button class="btn" type="button" data-quick="time|s|min|90">Time: 90 s → min</button>
+              <button class="btn" type="button" data-quick="time|min|hr|120">Time: 120 min → hr</button>
+              <button class="btn" type="button" data-quick="time|day|hr|2">Time: 2 day → hr</button>
+
+              <div class="note">
+                These presets just fill the fields — you can tweak the numbers after.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>
+          BMI: type values and hit <span class="kbd">Calculate</span>. Converter: updates live as you edit.
+        </div>
+        <div>
+          Everything stays local in the browser (no network calls).
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  /* -------------------------
+     Tabs (BMI / Converter)
+     ------------------------- */
+  const tabBmi  = document.getElementById("tabBmi");
+  const tabConv = document.getElementById("tabConv");
+  const viewBmi  = document.getElementById("viewBmi");
+  const viewConv = document.getElementById("viewConv");
+
+  function setTab(which){
+    tabBmi.classList.toggle("active", which === "bmi");
+    tabConv.classList.toggle("active", which === "conv");
+    viewBmi.classList.toggle("hidden", which !== "bmi");
+    viewConv.classList.toggle("hidden", which !== "conv");
+  }
+  tabBmi.addEventListener("click", () => setTab("bmi"));
+  tabConv.addEventListener("click", () => setTab("conv"));
+
+  /* =========================
+     BMI / Weight
+     ========================= */
+
+  const heightUnit = document.getElementById("heightUnit");
+  const weightUnit = document.getElementById("weightUnit");
+
+  const rowMetric = document.getElementById("rowMetric");
+  const rowFtin   = document.getElementById("rowFtin");
+
+  const heightValue = document.getElementById("heightValue");
+  const weightValue = document.getElementById("weightValue");
+  const heightFt = document.getElementById("heightFt");
+  const heightIn = document.getElementById("heightIn");
+  const targetBmi = document.getElementById("targetBmi");
+
+  const bmiOut = document.getElementById("bmiOut");
+  const catPill = document.getElementById("catPill");
+  const rangePill = document.getElementById("rangePill");
+  const bmiNarrative = document.getElementById("bmiNarrative");
+
+  const targetWeightOut = document.getElementById("targetWeightOut");
+  const targetWeightNote = document.getElementById("targetWeightNote");
+
+  const bmi22Out = document.getElementById("bmi22Out");
+  const deltaOut = document.getElementById("deltaOut");
+  const deltaNote = document.getElementById("deltaNote");
+  const rangeWeightsOut = document.getElementById("rangeWeightsOut");
+
+  // Small formatter: human numbers, not a wall of decimals.
+  function fmt(x, digits=2){
+    if (!Number.isFinite(x)) return "—";
+    const s = x.toFixed(digits);
+    return s.replace(/\.00$/,"").replace(/(\.\d)0$/,"$1");
+  }
+
+  // Convert weight input to kilograms.
+  function kgFromWeight(v, unit){
+    const x = Number(v);
+    if (!Number.isFinite(x) || x <= 0) return null;
+    if (unit === "kg") return x;
+    if (unit === "lb") return x * 0.45359237;
+    return null;
+  }
+
+  // Convert kilograms back to the selected unit.
+  function weightFromKg(kg, unit){
+    if (!Number.isFinite(kg) || kg <= 0) return null;
+    if (unit === "kg") return kg;
+    if (unit === "lb") return kg / 0.45359237;
+    return null;
+  }
+
+  // Convert height input to meters.
+  function metersFromHeight(){
+    const u = heightUnit.value;
+
+    if (u === "cm"){
+      const x = Number(heightValue.value);
+      if (!Number.isFinite(x) || x <= 0) return null;
+      return x / 100;
+    }
+
+    if (u === "m"){
+      const x = Number(heightValue.value);
+      if (!Number.isFinite(x) || x <= 0) return null;
+      return x;
+    }
+
+    if (u === "ftin"){
+      const ft = Number(heightFt.value);
+      const inch = Number(heightIn.value);
+      if (!Number.isFinite(ft) || !Number.isFinite(inch)) return null;
+      if (ft < 0 || inch < 0) return null;
+      const totalIn = (ft * 12) + inch;
+      if (totalIn <= 0) return null;
+      return totalIn * 0.0254;
+    }
+
+    return null;
+  }
+
+  // Adult BMI categories (simple, standard cutoffs).
+  function bmiCategory(bmi){
+    if (bmi < 18.5) return {label:"Underweight", tone:"warn"};
+    if (bmi < 25)   return {label:"Healthy", tone:"good"};
+    if (bmi < 30)   return {label:"Overweight", tone:"warn"};
+    return {label:"Obesity", tone:"bad"};
+  }
+
+  function setBmiEmpty(){
+    bmiOut.textContent = "BMI: —";
+    catPill.textContent = "Category: —";
+    catPill.className = "pill";
+    rangePill.textContent = "Healthy range: —";
+    rangePill.className = "pill";
+
+    bmiNarrative.textContent = "Enter height and weight to calculate BMI and see a healthy weight range for your height.";
+
+    targetWeightOut.textContent = "Target weight: —";
+    targetWeightNote.textContent = "If you enter a target BMI, this shows what weight that BMI corresponds to (for your height).";
+
+    bmi22Out.textContent = "BMI 22 weight: —";
+    deltaOut.textContent = "To reach healthy range: —";
+    deltaNote.textContent = "This shows the smallest change needed to enter the 18.5–24.9 range.";
+    rangeWeightsOut.textContent = "Range weights: —";
+  }
+
+  function calcBMI(){
+    const m = metersFromHeight();
+    const kg = kgFromWeight(weightValue.value, weightUnit.value);
+
+    if (!m || !kg){
+      setBmiEmpty();
+      return;
+    }
+
+    const bmi = kg / (m*m);
+    const cat = bmiCategory(bmi);
+
+    catPill.textContent = `Category: ${cat.label}`;
+    catPill.className = `pill ${cat.tone}`;
+
+    bmiOut.textContent = `BMI: ${fmt(bmi, 2)}`;
+
+    // Healthy range by BMI 18.5–24.9 for this height.
+    const minKg = 18.5 * (m*m);
+    const maxKg = 24.9 * (m*m);
+
+    const minW = weightFromKg(minKg, weightUnit.value);
+    const maxW = weightFromKg(maxKg, weightUnit.value);
+
+    rangePill.textContent = `Healthy range: ${fmt(minW, 1)}–${fmt(maxW, 1)} ${weightUnit.value}`;
+    rangePill.className = "pill";
+
+    rangeWeightsOut.textContent = `Range weights: ${fmt(minW, 1)}–${fmt(maxW, 1)} ${weightUnit.value}`;
+
+    // Narrative, simple and direct.
+    let msg = `At your height, a healthy BMI range (18.5–24.9) maps to about ${fmt(minW,1)}–${fmt(maxW,1)} ${weightUnit.value}.`;
+    if (bmi < 18.5) msg += " You are below that range.";
+    else if (bmi <= 24.9) msg += " You are inside that range.";
+    else msg += " You are above that range.";
+    bmiNarrative.textContent = msg;
+
+    // BMI 22 helper.
+    const midKg = 22 * (m*m);
+    const midW  = weightFromKg(midKg, weightUnit.value);
+    bmi22Out.textContent = `BMI 22 weight: ${fmt(midW, 1)} ${weightUnit.value}`;
+
+    // Delta to enter healthy range (minimum change).
+    const currW = weightFromKg(kg, weightUnit.value);
+    if (currW < minW){
+      deltaOut.textContent = `To reach healthy range: +${fmt(minW - currW, 1)} ${weightUnit.value}`;
+      deltaNote.textContent = "That’s the minimum gain to reach BMI 18.5.";
+    } else if (currW > maxW){
+      deltaOut.textContent = `To reach healthy range: -${fmt(currW - maxW, 1)} ${weightUnit.value}`;
+      deltaNote.textContent = "That’s the minimum reduction to reach BMI 24.9.";
+    } else {
+      deltaOut.textContent = "To reach healthy range: You’re already in it";
+      deltaNote.textContent = "No change needed to be within 18.5–24.9.";
+    }
+
+    // Optional target BMI → target weight.
+    const tb = Number(targetBmi.value);
+    if (Number.isFinite(tb) && tb > 0){
+      const tKg = tb * (m*m);
+      const tW  = weightFromKg(tKg, weightUnit.value);
+      targetWeightOut.textContent = `Target weight: ${fmt(tW, 1)} ${weightUnit.value}`;
+      targetWeightNote.textContent = `This is the weight that corresponds to BMI ${fmt(tb,1)} at your height.`;
+    } else {
+      targetWeightOut.textContent = "Target weight: —";
+      targetWeightNote.textContent = "If you enter a target BMI, this shows what weight that BMI corresponds to (for your height).";
+    }
+  }
+
+  function syncHeightUI(){
+    const u = heightUnit.value;
+    rowMetric.classList.toggle("hidden", u === "ftin");
+    rowFtin.classList.toggle("hidden", u !== "ftin");
+    calcBMI();
+  }
+
+  document.getElementById("bmiCalcBtn").addEventListener("click", calcBMI);
+
+  heightUnit.addEventListener("change", syncHeightUI);
+  weightUnit.addEventListener("change", calcBMI);
+  [heightValue, weightValue, heightFt, heightIn, targetBmi].forEach(el => {
+    el.addEventListener("input", calcBMI);
+  });
+
+  document.getElementById("resetBmiBtn").addEventListener("click", () => {
+    heightUnit.value = "cm";
+    weightUnit.value = "kg";
+    heightValue.value = "";
+    weightValue.value = "";
+    heightFt.value = "";
+    heightIn.value = "";
+    targetBmi.value = "";
+    syncHeightUI();
+  });
+
+  document.getElementById("copyBmiBtn").addEventListener("click", async () => {
+    // Copy a tidy summary (people actually paste these).
+    const text = [
+      bmiOut.textContent,
+      catPill.textContent,
+      rangePill.textContent,
+      targetWeightOut.textContent,
+      bmi22Out.textContent,
+      deltaOut.textContent
+    ].join("\n");
+    try{
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById("copyBmiBtn");
+      const old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => btn.textContent = old, 900);
+    } catch {}
+  });
+
+  /* =========================
+     Unit Converter (Length/Mass/Time)
+     ========================= */
+
+  // Keep it simple: everything runs through a base unit.
+  // - length base: meter
+  // - mass base: kilogram
+  // - time base: second
+  const UNITS = {
+    length: {
+      m: 1,
+      mm: 0.001,
+      cm: 0.01,
+      km: 1000,
+      in: 0.0254,
+      ft: 0.3048,
+      yd: 0.9144,
+      mi: 1609.344,
+      nmi: 1852
+    },
+    mass: {
+      kg: 1,
+      mg: 0.000001,
+      g: 0.001,
+      t: 1000,
+      oz: 0.028349523125,
+      lb: 0.45359237,
+      st: 6.35029318
+    },
+    time: {
+      s: 1,
+      ms: 0.001,
+      min: 60,
+      hr: 3600,
+      day: 86400,
+      week: 604800,
+      month: 2592000,   // 30 days fixed (clean conversion)
+      year: 31536000    // 365 days fixed (clean conversion)
+    }
+  };
+
+  const convKind = document.getElementById("convKind");
+  const convVal  = document.getElementById("convVal");
+  const convFrom = document.getElementById("convFrom");
+  const convTo   = document.getElementById("convTo");
+  const convOut  = document.getElementById("convOut");
+  const convFormula = document.getElementById("convFormula");
+  const timeNote = document.getElementById("timeNote");
+
+  function fillSelect(sel, map, preferred){
+    sel.innerHTML = "";
+    Object.keys(map).forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k;
+      sel.appendChild(opt);
+    });
+    if (preferred && map[preferred] != null) sel.value = preferred;
+  }
+
+  function prettyNum(x){
+    if (!Number.isFinite(x)) return "";
+    const ax = Math.abs(x);
+    if (ax !== 0 && (ax < 1e-9 || ax >= 1e12)) return x.toExponential(10);
+    let s = x.toPrecision(12);
+    if (s.includes("e")) return s;
+    s = s.replace(/(\.\d+?)0+$/,"$1").replace(/\.0$/,"");
+    return s;
+  }
+
+  function convert(){
+    const kind = convKind.value;
+    const map = UNITS[kind];
+
+    const x = Number(convVal.value);
+    if (!Number.isFinite(x)){
+      convOut.value = "";
+      convFormula.textContent = "—";
+      return;
+    }
+
+    const f = map[convFrom.value];
+    const t = map[convTo.value];
+    if (!Number.isFinite(f) || !Number.isFinite(t)){
+      convOut.value = "";
+      convFormula.textContent = "—";
+      return;
+    }
+
+    const base = x * f;
+    const out  = base / t;
+
+    convOut.value = prettyNum(out);
+
+    // Make the math visible (helps trust).
+    // Example: 3 ft → m:
+    // base = 3 * 0.3048 = 0.9144 (meters)
+    convFormula.textContent =
+      `${prettyNum(x)} ${convFrom.value} → ${prettyNum(out)} ${convTo.value}   (base: ${prettyNum(base)} ${baseUnitLabel(kind)})`;
+  }
+
+  function baseUnitLabel(kind){
+    if (kind === "length") return "m";
+    if (kind === "mass") return "kg";
+    if (kind === "time") return "s";
+    return "";
+  }
+
+  function setConverterKind(kind){
+    const map = UNITS[kind];
+
+    // Reasonable defaults per category.
+    if (kind === "length"){
+      fillSelect(convFrom, map, "m");
+      fillSelect(convTo, map, "ft");
+    } else if (kind === "mass"){
+      fillSelect(convFrom, map, "kg");
+      fillSelect(convTo, map, "lb");
+    } else {
+      fillSelect(convFrom, map, "s");
+      fillSelect(convTo, map, "min");
+    }
+
+    timeNote.classList.toggle("hidden", kind !== "time");
+    convert();
+  }
+
+  convKind.addEventListener("change", () => setConverterKind(convKind.value));
+  [convVal, convFrom, convTo].forEach(el => {
+    el.addEventListener("input", convert);
+    el.addEventListener("change", convert);
+  });
+
+  document.getElementById("swapBtn").addEventListener("click", () => {
+    const a = convFrom.value;
+    convFrom.value = convTo.value;
+    convTo.value = a;
+    convert();
+  });
+
+  document.getElementById("resetConvBtn").addEventListener("click", () => {
+    convVal.value = "";
+    setConverterKind(convKind.value);
+    convOut.value = "";
+    convFormula.textContent = "—";
+  });
+
+  document.getElementById("copyConvBtn").addEventListener("click", async () => {
+    const v = convOut.value;
+    if (!v) return;
+    const text = `${convVal.value} ${convFrom.value} = ${v} ${convTo.value}`;
+    try{
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById("copyConvBtn");
+      const old = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => btn.textContent = old, 900);
+    } catch {}
+  });
+
+  // Quick-pick buttons
+  document.querySelectorAll("[data-quick]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const [kind, from, to, val] = btn.getAttribute("data-quick").split("|");
+      setTab("conv");
+      convKind.value = kind;
+      setConverterKind(kind);
+      convFrom.value = from;
+      convTo.value = to;
+      convVal.value = val;
+      convert();
+    });
+  });
+
+  /* -------------------------
+     Init
+     ------------------------- */
+  syncHeightUI();
+  setConverterKind("length");
+  setBmiEmpty();
+})();
+</script>
+</body>
+</html>

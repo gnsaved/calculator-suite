@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Scientific Calculator (Comprehensive)</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1620;
+      --panel2:#0c121a;
+      --text:#eaf2ff;
+      --muted:#9ab0c9;
+      --line:rgba(255,255,255,.10);
+      --btn:#121c28;
+      --btn2:#0f1a26;
+      --btnHover:#172435;
+      --accent:#7c3aed;
+      --accent2:#22c55e;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 18px 40px rgba(0,0,0,.45);
+      --radius:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 15% 10%, rgba(124,58,237,.18), transparent 60%),
+                  radial-gradient(1000px 600px at 85% 30%, rgba(34,197,94,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .app{
+      width:min(1100px, 100%);
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .app{grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .header{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+    }
+    .title{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .badge{
+      font-size:12px;
+      padding:4px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--muted);
+      background: rgba(0,0,0,.18);
+    }
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .toggle{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: rgba(0,0,0,.18);
+      color:var(--muted);
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      transition:.15s ease;
+    }
+    .toggle:hover{border-color:rgba(255,255,255,.18)}
+    .toggle b{color:var(--text); font-weight:700;}
+    .pill{
+      font-size:12px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: rgba(0,0,0,.18);
+      color:var(--muted);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .pill span{color:var(--text); font-weight:700;}
+    .main{
+      padding:14px;
+      display:grid;
+      gap:14px;
+    }
+
+    /* Display */
+    .display{
+      background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.15));
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding:14px;
+      display:grid;
+      gap:10px;
+    }
+    .expr{
+      font-family:var(--mono);
+      font-size:14px;
+      color:var(--muted);
+      min-height:22px;
+      word-break:break-word;
+      white-space:pre-wrap;
+    }
+    .resultRow{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .result{
+      font-family:var(--mono);
+      font-size:28px;
+      font-weight:800;
+      line-height:1.1;
+      word-break:break-word;
+    }
+    .miniBtns{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .miniBtn{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color:var(--muted);
+      cursor:pointer;
+      transition:.15s ease;
+      user-select:none;
+    }
+    .miniBtn:hover{ background: rgba(255,255,255,.05); color:var(--text); }
+    .miniBtn.accent{ border-color: rgba(124,58,237,.35); color:#d8c7ff; }
+    .miniBtn.good{ border-color: rgba(34,197,94,.35); color:#c7ffe0; }
+
+    /* Keypad */
+    .keypad{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .keypad{grid-template-columns: 1fr;}
+    }
+    .pad{
+      background: rgba(0,0,0,.16);
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding:12px;
+      display:grid;
+      gap:10px;
+    }
+    .padTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.25px;
+      text-transform:uppercase;
+    }
+    .grid{
+      display:grid;
+      gap:8px;
+    }
+    .grid.func{ grid-template-columns: repeat(5, minmax(0,1fr)); }
+    .grid.ops{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .grid.num{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+
+    button.key{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      color:var(--text);
+      padding:12px 10px;
+      border-radius:14px;
+      cursor:pointer;
+      font-size:14px;
+      user-select:none;
+      transition:.12s ease;
+      outline:none;
+    }
+    button.key:hover{ background: rgba(255,255,255,.06); transform: translateY(-1px); }
+    button.key:active{ transform: translateY(0px) scale(.99); }
+    button.key.muted{ color:var(--muted); }
+    button.key.accent{
+      border-color: rgba(124,58,237,.35);
+      box-shadow: 0 0 0 1px rgba(124,58,237,.10) inset;
+    }
+    button.key.good{
+      border-color: rgba(34,197,94,.35);
+      box-shadow: 0 0 0 1px rgba(34,197,94,.10) inset;
+    }
+    button.key.danger{
+      border-color: rgba(239,68,68,.35);
+      box-shadow: 0 0 0 1px rgba(239,68,68,.10) inset;
+    }
+    button.key.wide{ grid-column: span 2; }
+    button.key.tall{ grid-row: span 2; }
+
+    /* Sidebar / History */
+    .side{
+      display:grid;
+      grid-template-rows:auto 1fr;
+      min-height: 560px;
+    }
+    .history{
+      padding:12px;
+      display:grid;
+      gap:10px;
+    }
+    .historyHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .historyHead .hint{
+      color:var(--muted);
+      font-size:12px;
+    }
+    .hList{
+      display:grid;
+      gap:10px;
+      align-content:start;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .hItem{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      border-radius: 16px;
+      padding:10px 10px;
+      cursor:pointer;
+      transition:.12s ease;
+    }
+    .hItem:hover{ border-color: rgba(255,255,255,.18); }
+    .hExpr{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      word-break:break-word;
+      white-space:pre-wrap;
+    }
+    .hRes{
+      font-family:var(--mono);
+      font-size:15px;
+      font-weight:800;
+      margin-top:6px;
+      word-break:break-word;
+    }
+    .footerNote{
+      padding:12px 16px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      background: rgba(0,0,0,.10);
+    }
+    .kbd{
+      font-family:var(--mono);
+      border:1px solid var(--line);
+      padding:2px 6px;
+      border-radius:8px;
+      background: rgba(0,0,0,.25);
+      color:var(--text);
+      font-size:11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Main calculator -->
+    <div class="card">
+      <div class="header">
+        <div class="title">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block"></span>
+          Scientific Calculator
+          <span class="badge">safe parser • history • keyboard</span>
+        </div>
+        <div class="controls">
+          <div class="toggle" id="angleToggle" title="Toggle angle mode (RAD/DEG)">
+            Mode: <b id="angleLabel">RAD</b>
+          </div>
+          <div class="pill" title="Memory register">
+            M: <span id="memLabel">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="display">
+          <div class="expr" id="exprOut"></div>
+          <div class="resultRow">
+            <div class="result" id="resOut">0</div>
+            <div class="miniBtns">
+              <div class="miniBtn" id="copyBtn" title="Copy result">Copy</div>
+              <div class="miniBtn accent" id="useAnsBtn" title="Insert Ans">Ans</div>
+              <div class="miniBtn good" id="evalBtn" title="Evaluate (Enter)">=</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="keypad">
+          <!-- Functions -->
+          <div class="pad">
+            <div class="padTitle">
+              <span>Functions</span>
+              <span class="hint">use like: <span class="kbd">sin(30)</span> • <span class="kbd">nCr(10,3)</span></span>
+            </div>
+            <div class="grid func">
+              <button class="key muted" data-ins="(">(</button>
+              <button class="key muted" data-ins=")">)</button>
+              <button class="key muted" data-ins=",">,</button>
+              <button class="key muted" data-ins="Ans">Ans</button>
+              <button class="key muted" data-ins="π">π</button>
+
+              <button class="key" data-fn="sin(">sin</button>
+              <button class="key" data-fn="cos(">cos</button>
+              <button class="key" data-fn="tan(">tan</button>
+              <button class="key" data-fn="asin(">asin</button>
+              <button class="key" data-fn="acos(">acos</button>
+
+              <button class="key" data-fn="atan(">atan</button>
+              <button class="key" data-fn="sinh(">sinh</button>
+              <button class="key" data-fn="cosh(">cosh</button>
+              <button class="key" data-fn="tanh(">tanh</button>
+              <button class="key" data-fn="asinh(">asinh</button>
+
+              <button class="key" data-fn="acosh(">acosh</button>
+              <button class="key" data-fn="atanh(">atanh</button>
+              <button class="key" data-fn="log(">log</button>
+              <button class="key" data-fn="ln(">ln</button>
+              <button class="key" data-fn="exp(">exp</button>
+
+              <button class="key" data-fn="sqrt(">√</button>
+              <button class="key" data-fn="cbrt(">∛</button>
+              <button class="key" data-fn="abs(">abs</button>
+              <button class="key" data-fn="floor(">floor</button>
+              <button class="key" data-fn="ceil(">ceil</button>
+
+              <button class="key" data-fn="round(">round</button>
+              <button class="key" data-fn="rand(">rand</button>
+              <button class="key" data-fn="nCr(">nCr</button>
+              <button class="key" data-fn="nPr(">nPr</button>
+              <button class="key muted" data-ins="e">e</button>
+            </div>
+          </div>
+
+          <!-- Numbers + Operators -->
+          <div class="pad">
+            <div class="padTitle">
+              <span>Input</span>
+              <span class="hint">keys: <span class="kbd">Enter</span> evaluate • <span class="kbd">Backspace</span> delete</span>
+            </div>
+
+            <div class="grid ops">
+              <button class="key danger" id="acBtn">AC</button>
+              <button class="key" id="delBtn">DEL</button>
+              <button class="key muted" data-ins="%">%</button>
+              <button class="key accent" data-ins="^">xʸ</button>
+
+              <button class="key muted" data-ins="!">x!</button>
+              <button class="key muted" data-ins="EE">EE</button>
+              <button class="key muted" data-ins="1/(" title="Reciprocal: 1/(x)">1/x</button>
+              <button class="key muted" id="pmBtn">±</button>
+            </div>
+
+            <div class="grid num">
+              <button class="key muted" id="mcBtn">MC</button>
+              <button class="key muted" id="mrBtn">MR</button>
+              <button class="key muted" id="msBtn">MS</button>
+              <button class="key muted" id="mPlusBtn">M+</button>
+
+              <button class="key" data-ins="7">7</button>
+              <button class="key" data-ins="8">8</button>
+              <button class="key" data-ins="9">9</button>
+              <button class="key accent" data-ins="/">÷</button>
+
+              <button class="key" data-ins="4">4</button>
+              <button class="key" data-ins="5">5</button>
+              <button class="key" data-ins="6">6</button>
+              <button class="key accent" data-ins="*">×</button>
+
+              <button class="key" data-ins="1">1</button>
+              <button class="key" data-ins="2">2</button>
+              <button class="key" data-ins="3">3</button>
+              <button class="key accent" data-ins="-">−</button>
+
+              <button class="key wide" data-ins="0">0</button>
+              <button class="key" data-ins=".">.</button>
+              <button class="key accent" data-ins="+">+</button>
+
+              <button class="key good wide" id="equalsBtn">=</button>
+              <button class="key muted" id="mMinusBtn">M-</button>
+              <button class="key muted" id="clearHistBtn">Clear History</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footerNote">
+        Tips: implicit multiplication works (e.g. <span class="kbd">2π</span>, <span class="kbd">2(3+4)</span>). Percent is postfix (<span class="kbd">50%</span> = 0.5). Factorial requires non-negative integers.
+      </div>
+    </div>
+
+    <!-- History / Side panel -->
+    <div class="card side">
+      <div class="header">
+        <div class="title">
+          <span style="width:10px;height:10px;border-radius:50%;background:var(--accent2);display:inline-block"></span>
+          History
+          <span class="badge">click to reuse</span>
+        </div>
+        <div class="controls">
+          <div class="pill" title="Last answer">
+            Ans: <span id="ansLabel">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="history">
+        <div class="historyHead">
+          <div class="hint">Examples: <span class="kbd">sin(30)</span>, <span class="kbd">log(1000)</span>, <span class="kbd">nCr(10,3)</span>, <span class="kbd">(5+3)!/8</span></div>
+        </div>
+        <div class="hList" id="histList"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------------------------
+  // State
+  // ---------------------------
+  let expr = "";
+  let lastResult = 0;
+  let memory = 0;
+  let angleMode = "RAD"; // or "DEG"
+  const history = [];
+
+  // ---------------------------
+  // UI refs
+  // ---------------------------
+  const exprOut = document.getElementById("exprOut");
+  const resOut = document.getElementById("resOut");
+  const histList = document.getElementById("histList");
+  const ansLabel = document.getElementById("ansLabel");
+  const angleLabel = document.getElementById("angleLabel");
+  const memLabel = document.getElementById("memLabel");
+
+  // ---------------------------
+  // Helpers: formatting
+  // ---------------------------
+  function isFiniteNumber(x){ return typeof x === "number" && Number.isFinite(x); }
+
+  function formatNumber(x){
+    if (!isFiniteNumber(x)) return String(x);
+    if (Object.is(x, -0)) x = 0;
+    const ax = Math.abs(x);
+
+    // scientific format for huge/small numbers
+    if ((ax !== 0 && ax < 1e-9) || ax >= 1e12){
+      return x.toExponential(12).replace(/(?:\.0+|(\.\d+?)0+)e/, "$1e");
+    }
+
+    // normal format, trim floating artifacts
+    let s = x.toPrecision(15);
+    if (s.includes("e")) return s.replace(/(?:\.0+|(\.\d+?)0+)e/, "$1e");
+    s = s.replace(/(\.\d+?)0+$/,"$1").replace(/\.0$/,"");
+    return s;
+  }
+
+  function setDisplay(){
+    exprOut.textContent = expr || " ";
+    resOut.textContent = formatNumber(lastResult);
+    ansLabel.textContent = formatNumber(lastResult);
+    memLabel.textContent = formatNumber(memory);
+    angleLabel.textContent = angleMode;
+  }
+
+  function pushHistory(e, r){
+    history.unshift({expr: e, res: r});
+    if (history.length > 60) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory(){
+    histList.innerHTML = "";
+    if (history.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "hItem";
+      empty.style.opacity = .8;
+      empty.innerHTML = `<div class="hExpr">No calculations yet.</div><div class="hRes">Try something like: sin(30) or 2π(3+4)</div>`;
+      empty.onclick = () => {
+        expr = "sin(30)";
+        lastResult = lastResult;
+        setDisplay();
+      };
+      histList.appendChild(empty);
+      return;
+    }
+
+    history.forEach((h) => {
+      const item = document.createElement("div");
+      item.className = "hItem";
+      item.innerHTML = `
+        <div class="hExpr">${escapeHtml(h.expr)}</div>
+        <div class="hRes">${escapeHtml(formatNumber(h.res))}</div>
+      `;
+      item.onclick = () => {
+        expr = h.expr;
+        setDisplay();
+      };
+      histList.appendChild(item);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ---------------------------
+  // Input logic (with implicit multiplication)
+  // ---------------------------
+  function lastChar(){
+    return expr.length ? expr[expr.length - 1] : "";
+  }
+  function isDigit(ch){ return ch >= "0" && ch <= "9"; }
+  function isLetter(ch){ return /[a-zA-Zπ]/.test(ch); }
+
+  function needsImplicitMul(nextToken){
+    // Add '*' if expr ends with number/constant/close-paren/factorial/percent
+    // and next token starts with number/constant/open-paren/function/π/e/Ans
+    if (!expr) return false;
+    const a = lastChar();
+    const leftIsValue = isDigit(a) || a === "." || a === ")" || a === "π" || a === "e" || a === "!" || a === "%" || /[a-zA-Z]$/.test(a);
+    const rightStartsValue = isDigit(nextToken[0]) || nextToken[0] === "." || nextToken[0] === "(" || isLetter(nextToken[0]);
+    // avoid implicit mul after operator or comma
+    const leftIsOperator = /[+\-*/^,(]/.test(a);
+    return leftIsValue && rightStartsValue && !leftIsOperator;
+  }
+
+  function insertText(t){
+    if (t === "EE") t = "e"; // exponent marker, works in number literals like 1e-3
+    if (t === "1/("){
+      // reciprocal helper: insert "1/(" and close later
+      if (needsImplicitMul("1")) expr += "*";
+      expr += "1/(";
+      setDisplay();
+      return;
+    }
+    if (t === "π") {
+      if (needsImplicitMul("π")) expr += "*";
+      expr += "π";
+      setDisplay();
+      return;
+    }
+    if (t === "Ans"){
+      if (needsImplicitMul("Ans")) expr += "*";
+      expr += "Ans";
+      setDisplay();
+      return;
+    }
+    if (t === "e") {
+      if (needsImplicitMul("e")) expr += "*";
+      expr += "e";
+      setDisplay();
+      return;
+    }
+
+    if (needsImplicitMul(t)) expr += "*";
+    expr += t;
+    setDisplay();
+  }
+
+  function insertFunction(fn){
+    // fn comes like "sin(" -> insert implicit mul if needed
+    if (needsImplicitMul(fn)) expr += "*";
+    expr += fn;
+    setDisplay();
+  }
+
+  function backspace(){
+    if (!expr) return;
+    expr = expr.slice(0, -1);
+    setDisplay();
+  }
+
+  function clearAll(){
+    expr = "";
+    lastResult = 0;
+    setDisplay();
+  }
+
+  function toggleSign(){
+    // Smart sign toggle:
+    // If the expression ends with a number literal, wrap it as (-x) or remove.
+    // Otherwise insert unary minus.
+    if (!expr){
+      expr = "-";
+      setDisplay();
+      return;
+    }
+    // find trailing token that looks like number/constant/Ans/close-paren
+    const m = expr.match(/(.*?)(\bAns\b|\bpi\b|\bπ\b|\be\b|(\d+(\.\d*)?|\.\d+)([eE][+\-]?\d+)?|\))$/i);
+    if (!m){
+      expr += "-";
+      setDisplay();
+      return;
+    }
+    const head = m[1];
+    const tail = m[2];
+    if (tail === ")"){
+      expr = head + "-(" + tail;
+    } else {
+      // if already wrapped as (-X) at end, try to undo
+      const undo = expr.match(/(.*)\(-([^)]+)\)$/);
+      if (undo){
+        expr = undo[1] + undo[2];
+      } else {
+        expr = head + "(-" + tail + ")";
+      }
+    }
+    setDisplay();
+  }
+
+  // ---------------------------
+  // Parser + Evaluator (Shunting-yard + RPN)
+  // ---------------------------
+  const TOK = {
+    NUMBER:"NUMBER",
+    IDENT:"IDENT",
+    OP:"OP",
+    LP:"LP",
+    RP:"RP",
+    COMMA:"COMMA",
+    POSTFIX:"POSTFIX"
+  };
+
+  function normalizeInput(s){
+    return s
+      .replace(/÷/g,"/")
+      .replace(/×/g,"*")
+      .replace(/−/g,"-")
+      .replace(/π/g,"pi")
+      .replace(/\s+/g,"");
+  }
+
+  function tokenize(s){
+    s = normalizeInput(s);
+    const tokens = [];
+    let i = 0;
+
+    const isAlpha = (c) => /[a-zA-Z_]/.test(c);
+    const isNumStart = (c) => /[0-9.]/.test(c);
+
+    while (i < s.length){
+      const c = s[i];
+
+      if (c === "("){ tokens.push({t:TOK.LP, v:"("}); i++; continue; }
+      if (c === ")"){ tokens.push({t:TOK.RP, v:")"}); i++; continue; }
+      if (c === ","){ tokens.push({t:TOK.COMMA, v:","}); i++; continue; }
+
+      // postfix operators
+      if (c === "!" || c === "%"){
+        tokens.push({t:TOK.POSTFIX, v:c});
+        i++;
+        continue;
+      }
+
+      // operators
+      if ("+-*/^".includes(c)){
+        tokens.push({t:TOK.OP, v:c});
+        i++;
+        continue;
+      }
+
+      // number literal (with exponent)
+      if (isNumStart(c)){
+        const m = s.slice(i).match(/^((\d+(\.\d*)?)|(\.\d+))([eE][+\-]?\d+)?/);
+        if (!m) throw new Error("Invalid number near: " + s.slice(i, i+10));
+        tokens.push({t:TOK.NUMBER, v:m[0]});
+        i += m[0].length;
+        continue;
+      }
+
+      // identifier
+      if (isAlpha(c)){
+        const m = s.slice(i).match(/^([a-zA-Z_][a-zA-Z_0-9]*)/);
+        tokens.push({t:TOK.IDENT, v:m[1]});
+        i += m[1].length;
+        continue;
+      }
+
+      throw new Error("Unexpected character: " + c);
+    }
+
+    return tokens;
+  }
+
+  const OPS = {
+    "+": {prec:1, assoc:"L", arity:2},
+    "-": {prec:1, assoc:"L", arity:2},
+    "*": {prec:2, assoc:"L", arity:2},
+    "/": {prec:2, assoc:"L", arity:2},
+    "^": {prec:4, assoc:"R", arity:2},
+    "NEG": {prec:3, assoc:"R", arity:1}, // unary minus
+    "POS": {prec:3, assoc:"R", arity:1}  // unary plus
+  };
+
+  function toRPN(tokens){
+    const out = [];
+    const stack = [];
+    let prev = null;
+
+    function isValueToken(tok){
+      return tok.t === TOK.NUMBER || tok.t === TOK.IDENT || tok.t === TOK.RP || tok.t === TOK.POSTFIX;
+    }
+
+    for (let idx=0; idx<tokens.length; idx++){
+      const tok = tokens[idx];
+
+      if (tok.t === TOK.NUMBER){
+        out.push(tok);
+      } else if (tok.t === TOK.IDENT){
+        // Could be constant or function. If next token is LP -> function call.
+        const next = tokens[idx+1];
+        if (next && next.t === TOK.LP){
+          stack.push({t:"FUNC", v:tok.v});
+        } else {
+          out.push(tok);
+        }
+      } else if (tok.t === TOK.COMMA){
+        while (stack.length && stack[stack.length-1].t !== TOK.LP){
+          out.push(stack.pop());
+        }
+        if (!stack.length) throw new Error("Misplaced comma");
+      } else if (tok.t === TOK.LP){
+        stack.push(tok);
+      } else if (tok.t === TOK.RP){
+        while (stack.length && stack[stack.length-1].t !== TOK.LP){
+          out.push(stack.pop());
+        }
+        if (!stack.length) throw new Error("Mismatched parentheses");
+        stack.pop(); // pop LP
+        // if function atop stack, pop it
+        if (stack.length && stack[stack.length-1].t === "FUNC"){
+          out.push(stack.pop());
+        }
+      } else if (tok.t === TOK.POSTFIX){
+        // postfix applied immediately
+        out.push(tok);
+      } else if (tok.t === TOK.OP){
+        let op = tok.v;
+
+        // determine unary
+        const prevIsNone = !prev;
+        const prevIsOp = prev && (prev.t === TOK.OP || prev.t === TOK.LP || prev.t === TOK.COMMA);
+        if ((op === "-" || op === "+") && (prevIsNone || prevIsOp)){
+          op = (op === "-") ? "NEG" : "POS";
+        }
+
+        const o1 = OPS[op];
+        if (!o1) throw new Error("Unknown operator: " + op);
+
+        while (stack.length){
+          const top = stack[stack.length-1];
+          if (top.t !== TOK.OP) break;
+
+          const o2 = OPS[top.v];
+          if (!o2) break;
+
+          const condLeft = (o1.assoc === "L" && o1.prec <= o2.prec);
+          const condRight = (o1.assoc === "R" && o1.prec < o2.prec);
+          if (condLeft || condRight){
+            out.push(stack.pop());
+          } else break;
+        }
+        stack.push({t:TOK.OP, v:op});
+      }
+
+      prev = tok;
+    }
+
+    while (stack.length){
+      const x = stack.pop();
+      if (x.t === TOK.LP || x.t === TOK.RP) throw new Error("Mismatched parentheses");
+      out.push(x);
+    }
+    return out;
+  }
+
+  function factInt(n){
+    if (!Number.isFinite(n)) throw new Error("Factorial of non-finite value");
+    if (Math.floor(n) !== n) throw new Error("Factorial needs an integer");
+    if (n < 0) throw new Error("Factorial needs non-negative integer");
+    if (n > 170) return Infinity; // beyond ~170 overflows JS double
+    let r = 1;
+    for (let i=2; i<=n; i++) r *= i;
+    return r;
+  }
+
+  function nCr(n, r){
+    if (!Number.isFinite(n) || !Number.isFinite(r)) throw new Error("nCr expects numbers");
+    n = Math.round(n); r = Math.round(r);
+    if (n < 0 || r < 0 || r > n) throw new Error("nCr requires 0 ≤ r ≤ n");
+    r = Math.min(r, n-r);
+    let num = 1, den = 1;
+    for (let k=1; k<=r; k++){
+      num *= (n - (r - k));
+      den *= k;
+    }
+    return num / den;
+  }
+
+  function nPr(n, r){
+    if (!Number.isFinite(n) || !Number.isFinite(r)) throw new Error("nPr expects numbers");
+    n = Math.round(n); r = Math.round(r);
+    if (n < 0 || r < 0 || r > n) throw new Error("nPr requires 0 ≤ r ≤ n");
+    let res = 1;
+    for (let k=0; k<r; k++) res *= (n - k);
+    return res;
+  }
+
+  function degToRad(x){ return x * Math.PI / 180; }
+  function radToDeg(x){ return x * 180 / Math.PI; }
+
+  const FUNCS = {
+    sin: (x) => Math.sin(angleMode === "DEG" ? degToRad(x) : x),
+    cos: (x) => Math.cos(angleMode === "DEG" ? degToRad(x) : x),
+    tan: (x) => Math.tan(angleMode === "DEG" ? degToRad(x) : x),
+
+    asin: (x) => angleMode === "DEG" ? radToDeg(Math.asin(x)) : Math.asin(x),
+    acos: (x) => angleMode === "DEG" ? radToDeg(Math.acos(x)) : Math.acos(x),
+    atan: (x) => angleMode === "DEG" ? radToDeg(Math.atan(x)) : Math.atan(x),
+
+    sinh: (x) => Math.sinh(x),
+    cosh: (x) => Math.cosh(x),
+    tanh: (x) => Math.tanh(x),
+    asinh: (x) => Math.asinh(x),
+    acosh: (x) => Math.acosh(x),
+    atanh: (x) => Math.atanh(x),
+
+    log: (x) => Math.log10(x),
+    ln: (x) => Math.log(x),
+    exp: (x) => Math.exp(x),
+    sqrt: (x) => Math.sqrt(x),
+    cbrt: (x) => Math.cbrt(x),
+
+    abs: (x) => Math.abs(x),
+    floor: (x) => Math.floor(x),
+    ceil: (x) => Math.ceil(x),
+    round: (x) => Math.round(x),
+    rand: () => Math.random(),
+
+    nCr: (n,r) => nCr(n,r),
+    nPr: (n,r) => nPr(n,r),
+  };
+
+  function evalRPN(rpn){
+    const st = [];
+    const getConst = (name) => {
+      const n = name.toLowerCase();
+      if (n === "pi") return Math.PI;
+      if (n === "e") return Math.E;
+      if (n === "ans") return lastResult;
+      throw new Error("Unknown identifier: " + name);
+    };
+
+    for (const tok of rpn){
+      if (tok.t === TOK.NUMBER){
+        st.push(Number(tok.v));
+      } else if (tok.t === TOK.IDENT){
+        st.push(getConst(tok.v));
+      } else if (tok.t === TOK.POSTFIX){
+        if (st.length < 1) throw new Error("Missing value for postfix " + tok.v);
+        const a = st.pop();
+        if (tok.v === "!") st.push(factInt(a));
+        else if (tok.v === "%") st.push(a / 100);
+        else throw new Error("Unknown postfix: " + tok.v);
+      } else if (tok.t === TOK.OP){
+        const op = tok.v;
+        const meta = OPS[op];
+        if (!meta) throw new Error("Unknown operator: " + op);
+        if (meta.arity === 1){
+          if (st.length < 1) throw new Error("Missing operand for " + op);
+          const a = st.pop();
+          if (op === "NEG") st.push(-a);
+          else if (op === "POS") st.push(+a);
+          else throw new Error("Bad unary op: " + op);
+        } else {
+          if (st.length < 2) throw new Error("Missing operands for " + op);
+          const b = st.pop();
+          const a = st.pop();
+          switch (op){
+            case "+": st.push(a + b); break;
+            case "-": st.push(a - b); break;
+            case "*": st.push(a * b); break;
+            case "/": st.push(a / b); break;
+            case "^": st.push(Math.pow(a, b)); break;
+            default: throw new Error("Bad op: " + op);
+          }
+        }
+      } else if (tok.t === "FUNC"){
+        const name = tok.v;
+        const fn = FUNCS[name];
+        if (!fn) throw new Error("Unknown function: " + name);
+
+        // Determine arg count by peeking at fn.length:
+        // - rand() => length 0
+        // - typical unary => length 1
+        // - nCr/nPr => length 2
+        const argc = fn.length;
+
+        if (argc === 0){
+          st.push(fn());
+        } else {
+          if (st.length < argc) throw new Error("Not enough arguments for " + name);
+          const args = st.splice(st.length - argc, argc);
+          st.push(fn(...args));
+        }
+      } else {
+        throw new Error("Bad token in RPN");
+      }
+    }
+
+    if (st.length !== 1) throw new Error("Invalid expression");
+    return st[0];
+  }
+
+  function evaluateExpression(s){
+    if (!s || !s.trim()) return lastResult;
+    const toks = tokenize(s);
+    const rpn = toRPN(toks);
+    const val = evalRPN(rpn);
+    if (!Number.isFinite(val) && val !== Infinity && val !== -Infinity){
+      // allow Infinity but show it
+      throw new Error("Result is not a number");
+    }
+    return val;
+  }
+
+  // ---------------------------
+  // Actions
+  // ---------------------------
+  function doEval(){
+    try{
+      const v = evaluateExpression(expr);
+      pushHistory(expr || "0", v);
+      lastResult = v;
+      // Keep expression (like real calculators) but you can continue
+      setDisplay();
+    } catch (e){
+      // show error briefly in result
+      resOut.textContent = "Error";
+      exprOut.textContent = (expr || " ") + "\n" + "⚠ " + String(e.message || e);
+      setTimeout(setDisplay, 1400);
+    }
+  }
+
+  async function copyResult(){
+    try{
+      await navigator.clipboard.writeText(formatNumber(lastResult));
+      const btn = document.getElementById("copyBtn");
+      const old = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = old, 900);
+    } catch {
+      // ignore
+    }
+  }
+
+  // ---------------------------
+  // Bind UI buttons
+  // ---------------------------
+  document.querySelectorAll("button.key[data-ins]").forEach(btn => {
+    btn.addEventListener("click", () => insertText(btn.getAttribute("data-ins")));
+  });
+  document.querySelectorAll("button.key[data-fn]").forEach(btn => {
+    btn.addEventListener("click", () => insertFunction(btn.getAttribute("data-fn")));
+  });
+
+  document.getElementById("equalsBtn").addEventListener("click", doEval);
+  document.getElementById("evalBtn").addEventListener("click", doEval);
+
+  document.getElementById("acBtn").addEventListener("click", clearAll);
+  document.getElementById("delBtn").addEventListener("click", backspace);
+  document.getElementById("pmBtn").addEventListener("click", toggleSign);
+
+  document.getElementById("copyBtn").addEventListener("click", copyResult);
+  document.getElementById("useAnsBtn").addEventListener("click", () => insertText("Ans"));
+
+  document.getElementById("clearHistBtn").addEventListener("click", () => {
+    history.length = 0;
+    renderHistory();
+  });
+
+  document.getElementById("angleToggle").addEventListener("click", () => {
+    angleMode = (angleMode === "RAD") ? "DEG" : "RAD";
+    setDisplay();
+  });
+
+  // Memory functions
+  document.getElementById("mcBtn").addEventListener("click", () => { memory = 0; setDisplay(); });
+  document.getElementById("mrBtn").addEventListener("click", () => { insertText(String(formatNumber(memory))); });
+  document.getElementById("msBtn").addEventListener("click", () => { memory = lastResult; setDisplay(); });
+  document.getElementById("mPlusBtn").addEventListener("click", () => { memory += lastResult; setDisplay(); });
+  document.getElementById("mMinusBtn").addEventListener("click", () => { memory -= lastResult; setDisplay(); });
+
+  // ---------------------------
+  // Keyboard support
+  // ---------------------------
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey) return;
+
+    const k = e.key;
+
+    if (k === "Enter"){
+      e.preventDefault();
+      doEval();
+      return;
+    }
+    if (k === "Backspace"){
+      e.preventDefault();
+      backspace();
+      return;
+    }
+    if (k === "Escape"){
+      e.preventDefault();
+      clearAll();
+      return;
+    }
+
+    // Allow typed characters
+    const allowed = "0123456789.+-*/^(),";
+    if (allowed.includes(k)){
+      insertText(k);
+      return;
+    }
+
+    // Common shortcuts
+    if (k === "%"){ insertText("%"); return; }
+    if (k === "!"){ insertText("!"); return; }
+
+    // pi shortcut: type 'p' then 'i' is normal; allow 'π' if available
+    if (k === "π"){ insertText("π"); return; }
+
+    // letters: build identifiers for functions/constants
+    if (/^[a-zA-Z]$/.test(k)){
+      // insert directly; parser handles identifiers
+      insertText(k);
+      return;
+    }
+  });
+
+  // ---------------------------
+  // Init
+  // ---------------------------
+  setDisplay();
+  renderHistory();
+})();
+</script>
+</body>
+</html>

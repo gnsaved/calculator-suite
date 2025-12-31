@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Calculator Suite</title>
+  <style>
+    :root{
+      --bg0:#050611;
+      --bg1:#070a18;
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+
+      --p1:#7621DC; /* purple */
+      --p2:#22c695; /* green */
+      --p3:#2aa3ff; /* blue */
+      --p4:#ff4fd8; /* pink */
+      --y:#ffd36e;  /* amber */
+
+      --glass: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.12);
+      --shadow: 0 30px 120px rgba(0,0,0,.55);
+
+      --r: 160px; /* orbit radius desktop */
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 520px at 18% 15%, rgba(118,33,220,.35), transparent 60%),
+        radial-gradient(900px 540px at 82% 18%, rgba(34,198,149,.22), transparent 62%),
+        radial-gradient(900px 620px at 55% 90%, rgba(42,163,255,.16), transparent 65%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow:hidden;
+    }
+
+    .noise{
+      pointer-events:none;
+      position:fixed;
+      inset:0;
+      opacity:.10;
+      mix-blend-mode: overlay;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
+      background-size: 280px 280px;
+    }
+
+    .wrap{
+      height:100%;
+      display:grid;
+      place-items:center;
+      padding: 22px;
+    }
+
+    .top{
+      position:fixed;
+      top:18px; left:18px; right:18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      z-index:10;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 14px 60px rgba(0,0,0,.35);
+    }
+
+    .logo{
+      width:34px;height:34px;border-radius: 12px;
+      background:
+        radial-gradient(14px 14px at 30% 30%, rgba(255,255,255,.40), transparent 60%),
+        linear-gradient(135deg, rgba(118,33,220,.95), rgba(34,198,149,.85));
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: 0 12px 30px rgba(118,33,220,.22);
+      flex:0 0 auto;
+    }
+
+    .brand .t{
+      display:grid; gap:1px;
+      line-height:1.1;
+    }
+    .brand .t b{ font-size: 13px; letter-spacing:.2px; }
+    .brand .t span{ font-size: 11px; color: var(--muted); }
+
+    .chip{
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      color: var(--muted);
+      font-size: 12px;
+      user-select:none;
+      display:flex; align-items:center; gap:8px;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:999px;
+      background: linear-gradient(180deg, var(--p1), var(--p2));
+      box-shadow: 0 0 16px rgba(118,33,220,.55);
+    }
+
+    .scene{
+      width:min(980px, 100%);
+      display:grid;
+      place-items:center;
+      position:relative;
+      padding: 22px;
+    }
+
+    /* Center orb */
+    .orb{
+      width:min(520px, 92vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 999px;
+      position:relative;
+      display:grid;
+      place-items:center;
+      box-shadow: var(--shadow);
+      background:
+        radial-gradient(closest-side at 30% 30%, rgba(255,255,255,.18), transparent 55%),
+        radial-gradient(closest-side at 70% 70%, rgba(34,198,149,.18), transparent 60%),
+        radial-gradient(closest-side, rgba(118,33,220,.25), rgba(0,0,0,0) 62%),
+        rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(18px);
+      overflow:hidden;
+    }
+
+    .orb:before{
+      content:"";
+      position:absolute;
+      inset:-40px;
+      background:
+        conic-gradient(from 180deg,
+          rgba(118,33,220,.35),
+          rgba(34,198,149,.22),
+          rgba(42,163,255,.18),
+          rgba(255,79,216,.22),
+          rgba(118,33,220,.35)
+        );
+      filter: blur(22px);
+      opacity:.55;
+      animation: spin 14s linear infinite;
+    }
+    .orb:after{
+      content:"";
+      position:absolute;
+      inset: 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: radial-gradient(closest-side, rgba(0,0,0,.10), rgba(0,0,0,.38));
+      backdrop-filter: blur(10px);
+    }
+
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .orb-inner{
+      position:relative;
+      z-index:2;
+      width: 78%;
+      text-align:center;
+      display:grid;
+      gap:10px;
+      padding: 26px 18px;
+    }
+
+    .orb-inner h1{
+      margin:0;
+      font-size: clamp(22px, 3.2vw, 36px);
+      letter-spacing: .3px;
+    }
+    .orb-inner p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .search{
+      margin: 14px auto 0;
+      width: min(520px, 100%);
+      display:flex;
+      gap:10px;
+      padding: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(12px);
+    }
+    .search input{
+      flex:1;
+      border:0;
+      outline:none;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    .search button{
+      border:1px solid rgba(34,198,149,.30);
+      background: linear-gradient(135deg, rgba(118,33,220,.45), rgba(34,198,149,.30));
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 12px;
+      cursor:pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .search button:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+
+    /* Orbit buttons */
+    .orbit{
+      position:absolute;
+      inset: 0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+    }
+
+    .orbit a{
+      pointer-events:auto;
+      position:absolute;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(12px);
+      color: var(--text);
+      text-decoration:none;
+      font-size: 13px;
+      box-shadow: 0 14px 55px rgba(0,0,0,.35);
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+      min-width: 210px;
+      justify-content: space-between;
+    }
+
+    .orbit a:hover{
+      transform: translateY(-3px) scale(1.01);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.18);
+    }
+
+    .mini{
+      width:34px; height:34px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      flex: 0 0 auto;
+    }
+
+    .arrow{
+      opacity:.75;
+      font-size: 13px;
+    }
+
+    .k{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+      margin-left: 10px;
+    }
+
+    /* Positioning around the orb (8 points) */
+    .p1{ transform: translate(calc(var(--r) * 0), calc(var(--r) * -1)); }
+    .p2{ transform: translate(calc(var(--r) * 0.78), calc(var(--r) * -0.62)); }
+    .p3{ transform: translate(calc(var(--r) * 1), calc(var(--r) * 0)); }
+    .p4{ transform: translate(calc(var(--r) * 0.78), calc(var(--r) * 0.62)); }
+    .p5{ transform: translate(calc(var(--r) * 0), calc(var(--r) * 1)); }
+    .p6{ transform: translate(calc(var(--r) * -0.78), calc(var(--r) * 0.62)); }
+    .p7{ transform: translate(calc(var(--r) * -1), calc(var(--r) * 0)); }
+    .p8{ transform: translate(calc(var(--r) * -0.78), calc(var(--r) * -0.62)); }
+
+    /* Color accents per tool */
+    .accent-purple{ box-shadow: 0 16px 60px rgba(118,33,220,.22); }
+    .accent-green{ box-shadow: 0 16px 60px rgba(34,198,149,.18); }
+    .accent-blue{ box-shadow: 0 16px 60px rgba(42,163,255,.18); }
+    .accent-pink{ box-shadow: 0 16px 60px rgba(255,79,216,.18); }
+    .accent-amber{ box-shadow: 0 16px 60px rgba(255,211,110,.14); }
+
+    .mini.purple{ background: linear-gradient(135deg, rgba(118,33,220,.55), rgba(118,33,220,.18)); }
+    .mini.green { background: linear-gradient(135deg, rgba(34,198,149,.45), rgba(34,198,149,.14)); }
+    .mini.blue  { background: linear-gradient(135deg, rgba(42,163,255,.45), rgba(42,163,255,.14)); }
+    .mini.pink  { background: linear-gradient(135deg, rgba(255,79,216,.42), rgba(255,79,216,.14)); }
+    .mini.amber { background: linear-gradient(135deg, rgba(255,211,110,.35), rgba(255,211,110,.12)); }
+
+    .bottom{
+      position:fixed;
+      left:0; right:0; bottom:16px;
+      display:flex;
+      justify-content:center;
+      padding: 0 16px;
+      z-index:10;
+    }
+
+    .hint{
+      width:min(980px, 100%);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(12px);
+      color: rgba(255,255,255,.58);
+      font-size: 12px;
+    }
+
+    .hint code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      color: rgba(255,255,255,.70);
+    }
+
+    /* Responsive: on small screens, turn orbit into stacked list */
+    @media (max-width: 860px){
+      :root{ --r: 0px; }
+      body{ overflow:auto; }
+      .scene{ padding: 70px 12px 110px; }
+      .orb{ width: min(520px, 100%); }
+      .orbit{
+        position:relative;
+        inset:auto;
+        margin-top: 14px;
+        width:100%;
+      }
+      .orbit a{
+        position:relative;
+        transform:none !important;
+        min-width: unset;
+        width: 100%;
+        max-width: 520px;
+        margin: 10px auto 0;
+      }
+      .chip{ display:none; }
+      .hint{ border-radius: 18px; flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+
+  <div class="top">
+    <div class="brand" title="Calculator Suite hub">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="t">
+        <b>Calculator Suite</b>
+        <span>Fast tools • clean UI • built by you</span>
+      </div>
+    </div>
+
+    <div class="chip" title="Tip: press 1..8 to open a tool">
+      <span class="dot" aria-hidden="true"></span>
+      Keyboard: <strong style="color:rgba(255,255,255,.8)">1</strong>–<strong style="color:rgba(255,255,255,.8)">8</strong>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="scene">
+
+      <div class="orb" aria-label="Calculator Suite center">
+        <div class="orb-inner">
+          <h1>Pick a tool.</h1>
+          <p>Everything here runs in your browser. No sign-up. No tracking. Just clean calculations.</p>
+
+          <div class="search" role="search" aria-label="Filter tools">
+            <input id="q" type="search" placeholder="Type to filter: bmi, loan, data, unit…" autocomplete="off" />
+            <button id="openFirst" type="button">Open</button>
+          </div>
+        </div>
+      </div>
+
+      <nav class="orbit" aria-label="Tools">
+        <!-- NOTE: target="_blank" opens new tab; rel protects against tab-nabbing -->
+        <a class="p1 accent-purple" data-key="1" data-tags="scientific trig sin cos tan log ln rad deg"
+           href="../calculator-suite/scientific-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini purple" aria-hidden="true">∑</span>
+            Scientific Calculator <span class="k">[1]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p2 accent-green" data-key="2" data-tags="bmi weight health body mass index"
+           href="../calculator-suite/bmi-weight-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini green" aria-hidden="true">⚖</span>
+            BMI & Weight <span class="k">[2]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p3 accent-amber" data-key="3" data-tags="bmr tdee calories planner cut bulk maintain macros"
+           href="../calculator-suite/bmr-tdee-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini amber" aria-hidden="true">🔥</span>
+            BMR & TDEE Planner <span class="k">[3]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p4 accent-pink" data-key="4" data-tags="body fat navy lean mass fat mass health"
+           href="../calculator-suite/body-fat-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini pink" aria-hidden="true">%</span>
+            Body Fat Calculator <span class="k">[4]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p5 accent-blue" data-key="5" data-tags="unit converter length mass time"
+           href="../calculator-suite/unit-converter/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini blue" aria-hidden="true">↔</span>
+            Unit Converter <span class="k">[5]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p6 accent-green" data-key="6" data-tags="loan mortgage emi interest amortization finance"
+           href="../calculator-suite/loan-mortgage-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini green" aria-hidden="true">₦</span>
+            Loan & Mortgage <span class="k">[6]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p7 accent-purple" data-key="7" data-tags="date time duration add subtract business days"
+           href="../calculator-suite/date-time-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini purple" aria-hidden="true">⏱</span>
+            Date & Time <span class="k">[7]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+
+        <a class="p8 accent-blue" data-key="8" data-tags="data bandwidth download time bits bytes mbps"
+           href="../calculator-suite/data-bandwidth-calculator/index.html" target="_blank" rel="noopener noreferrer">
+          <span style="display:flex;align-items:center;gap:10px;">
+            <span class="mini blue" aria-hidden="true">⤓</span>
+            Data & Bandwidth <span class="k">[8]</span>
+          </span>
+          <span class="arrow">↗</span>
+        </a>
+      </nav>
+
+    </section>
+  </div>
+
+  <div class="bottom">
+    <div class="hint">
+      <div>
+        <strong style="color:rgba(255,255,255,.78)">Tip:</strong>
+        Use the search box to filter tools. Press <code>Enter</code> to open the first match in a new tab.
+      </div>
+      <div>
+        Shortcuts (open new tab):
+        <code>1</code> <code>2</code> <code>3</code> <code>4</code> <code>5</code> <code>6</code> <code>7</code> <code>8</code>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const q = document.getElementById('q');
+    const btn = document.getElementById('openFirst');
+    const links = Array.from(document.querySelectorAll('.orbit a'));
+
+    function norm(s){ return (s||"").toLowerCase().trim(); }
+
+    function openNewTab(url){
+      if (!url) return;
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function applyFilter(){
+      const term = norm(q.value);
+      let first = null;
+
+      links.forEach(a => {
+        const tags = norm(a.getAttribute('data-tags'));
+        const name = norm(a.textContent);
+        const ok = !term || tags.includes(term) || name.includes(term);
+        a.style.display = ok ? '' : 'none';
+        if (ok && !first) first = a;
+      });
+
+      btn.disabled = !first;
+      btn.dataset.href = first ? first.href : '';
+    }
+
+    q.addEventListener('input', applyFilter);
+
+    btn.addEventListener('click', () => {
+      openNewTab(btn.dataset.href);
+    });
+
+    q.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        openNewTab(btn.dataset.href);
+      }
+    });
+
+    // 1..8 shortcuts (open new tab)
+    const shortcuts = {
+      "1": "../calculator-suite/scientific-calculator/index.html",
+      "2": "../calculator-suite/bmi-weight-calculator/index.html",
+      "3": "../calculator-suite/bmr-tdee-calculator/index.html",
+      "4": "../calculator-suite/body-fat-calculator/index.html",
+      "5": "../calculator-suite/unit-converter/index.html",
+      "6": "../calculator-suite/loan-mortgage-calculator/index.html",
+      "7": "../calculator-suite/date-time-calculator/index.html",
+      "8": "../calculator-suite/data-bandwidth-calculator/index.html"
+    };
+
+    window.addEventListener("keydown", (e) => {
+      const t = e.target && e.target.tagName;
+      const isTyping = (t === "INPUT" || t === "TEXTAREA");
+      if (isTyping) return;
+
+      const url = shortcuts[e.key];
+      if (url) openNewTab(url);
+    });
+
+    applyFilter();
+  </script>
+</body>
+</html>

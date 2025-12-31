@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BMR / TDEE Planner</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0b0d12;
+      --muted:#5b6473;
+      --line:rgba(15,23,42,.14);
+      --line2:rgba(15,23,42,.22);
+      --card:#ffffff;
+      --shadow: 0 18px 40px rgba(2,6,23,.08);
+      --shadow2: 0 10px 22px rgba(2,6,23,.06);
+      --r24:24px; --r18:18px; --r14:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--text); font-family:var(--sans);
+      /* Background #1: fine diagonal tech weave */
+      background:
+        repeating-linear-gradient(135deg, rgba(0,0,0,.035) 0 1px, transparent 1px 10px),
+        radial-gradient(900px 500px at 20% 0%, rgba(0,0,0,.05), transparent 60%),
+        var(--bg);
+      display:flex; justify-content:center; align-items:center; padding:18px;
+    }
+
+    .shell{
+      width:min(1040px, 100%);
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r24);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .top{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(0,0,0,.04), transparent 80%);
+    }
+    .brand{display:flex; gap:12px; align-items:center;}
+    .logo{
+      width:38px; height:38px; border-radius:14px; border:1px solid var(--line);
+      background:linear-gradient(135deg, rgba(0,0,0,.08), rgba(0,0,0,.02));
+    }
+    h1{font-size:14px; margin:0; font-weight:950; letter-spacing:.2px}
+    .sub{font-size:12px; color:var(--muted); margin-top:2px}
+    .pill{
+      border:1px solid var(--line); border-radius:999px; padding:8px 12px;
+      font-size:12px; color:var(--muted); background:#fff;
+    }
+    .pill b{color:var(--text)}
+    .content{padding:16px}
+
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: 1.05fr .95fr;
+      align-items:start;
+    }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:var(--r18);
+      background:#fff;
+      box-shadow:var(--shadow2);
+      overflow:hidden;
+    }
+    .head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      background:linear-gradient(180deg, rgba(0,0,0,.03), transparent 80%);
+    }
+    .head .t{font-size:12px; color:var(--muted); letter-spacing:.28px; font-weight:950; text-transform:uppercase;}
+    .head .h{font-size:12px; color:var(--muted); font-family:var(--mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;}
+    .stack{padding:14px; display:grid; gap:12px;}
+
+    label{display:block; font-size:12px; color:var(--muted); font-weight:950; margin-bottom:6px; letter-spacing:.12px;}
+    input, select{
+      width:100%; padding:12px 12px; border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; color:var(--text);
+      font-size:14px; outline:none; transition:.12s ease;
+    }
+    input:focus, select:focus{border-color:var(--line2); box-shadow:0 0 0 4px rgba(0,0,0,.07);}
+
+    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media (max-width: 720px){ .row2{grid-template-columns:1fr} }
+
+    .btn{
+      padding:12px 12px; border-radius:var(--r14);
+      border:1px solid var(--line); background:#fff; cursor:pointer;
+      font-weight:950; font-size:13px; transition:.12s ease;
+    }
+    .btn:hover{border-color:var(--line2); transform:translateY(-1px)}
+    .btn:active{transform:translateY(0) scale(.992)}
+    .btn.primary{background:#0b0d12; color:#fff; border-color:#0b0d12;}
+
+    .kpi{
+      border:1px solid var(--line); border-radius:var(--r18);
+      padding:12px; display:grid; gap:6px; background:#fff;
+    }
+    .kpi .big{font-family:var(--mono); font-weight:950; font-size:20px;}
+    .kpi .small{font-size:12px; color:var(--muted); line-height:1.5;}
+
+    .line{height:1px; background:var(--line);}
+
+    .footer{
+      padding:12px 16px; border-top:1px solid var(--line);
+      font-size:12px; color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      background:#fff;
+    }
+    .kbd{
+      font-family:var(--mono); border:1px solid var(--line); border-radius:10px;
+      padding:2px 6px; color:var(--text); background:#fff; font-weight:950; font-size:11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>BMR / TDEE Planner</h1>
+          <div class="sub">Mifflin-St Jeor • calorie targets • macro suggestions</div>
+        </div>
+      </div>
+      <div class="pill">Mode: <b id="unitModeLabel">Metric</b></div>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+        <div class="panel">
+          <div class="head">
+            <div class="t">Inputs</div>
+            <div class="h">Keep numbers realistic; outputs update on Calculate</div>
+          </div>
+          <div class="stack">
+            <div class="row2">
+              <div>
+                <label for="unitMode">Units</label>
+                <select id="unitMode">
+                  <option value="metric" selected>Metric (kg, cm)</option>
+                  <option value="imperial">Imperial (lb, ft/in)</option>
+                </select>
+              </div>
+              <div>
+                <label for="sex">Sex</label>
+                <select id="sex">
+                  <option value="male" selected>Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="age">Age (years)</label>
+                <input id="age" type="number" inputmode="numeric" placeholder="e.g., 28" />
+              </div>
+              <div>
+                <label for="activity">Activity level</label>
+                <select id="activity">
+                  <option value="1.2">Sedentary (1.2)</option>
+                  <option value="1.375">Light (1.375)</option>
+                  <option value="1.55" selected>Moderate (1.55)</option>
+                  <option value="1.725">Very active (1.725)</option>
+                  <option value="1.9">Athlete (1.9)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Metric inputs -->
+            <div class="row2" id="metricRow">
+              <div>
+                <label for="weightKg">Weight (kg)</label>
+                <input id="weightKg" type="number" inputmode="decimal" placeholder="e.g., 70" />
+              </div>
+              <div>
+                <label for="heightCm">Height (cm)</label>
+                <input id="heightCm" type="number" inputmode="decimal" placeholder="e.g., 175" />
+              </div>
+            </div>
+
+            <!-- Imperial inputs -->
+            <div class="row2" id="imperialRow" style="display:none;">
+              <div>
+                <label for="weightLb">Weight (lb)</label>
+                <input id="weightLb" type="number" inputmode="decimal" placeholder="e.g., 154" />
+              </div>
+              <div class="row2" style="grid-template-columns: 1fr 1fr; gap:10px;">
+                <div>
+                  <label for="heightFt">Height (ft)</label>
+                  <input id="heightFt" type="number" inputmode="numeric" placeholder="e.g., 5" />
+                </div>
+                <div>
+                  <label for="heightIn">Height (in)</label>
+                  <input id="heightIn" type="number" inputmode="numeric" placeholder="e.g., 9" />
+                </div>
+              </div>
+            </div>
+
+            <div class="line"></div>
+
+            <div class="row2">
+              <div>
+                <label for="goal">Goal</label>
+                <select id="goal">
+                  <option value="maintain" selected>Maintain</option>
+                  <option value="cut">Cut (deficit)</option>
+                  <option value="bulk">Bulk (surplus)</option>
+                </select>
+              </div>
+              <div>
+                <label for="delta">Deficit/Surplus (kcal/day)</label>
+                <select id="delta">
+                  <option value="200">200</option>
+                  <option value="300">300</option>
+                  <option value="400" selected>400</option>
+                  <option value="500">500</option>
+                  <option value="650">650</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row2">
+              <div>
+                <label for="proteinGkg">Protein (g/kg)</label>
+                <select id="proteinGkg">
+                  <option value="1.2">1.2 (light)</option>
+                  <option value="1.6" selected>1.6 (solid default)</option>
+                  <option value="2.0">2.0 (high)</option>
+                </select>
+              </div>
+              <div>
+                <label for="fatGkg">Fat (g/kg)</label>
+                <select id="fatGkg">
+                  <option value="0.6">0.6</option>
+                  <option value="0.8" selected>0.8 (default)</option>
+                  <option value="1.0">1.0</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row2">
+              <button class="btn primary" id="calcBtn" type="button">Calculate</button>
+              <button class="btn" id="copyBtn" type="button">Copy summary</button>
+            </div>
+
+            <div class="note" style="font-size:12px;color:var(--muted);line-height:1.55;">
+              Notes: This is estimation. If you want to make it stricter later, we can add weekly weight trend + adaptive calories.
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="head">
+            <div class="t">Outputs</div>
+            <div class="h">BMR → TDEE → goal calories</div>
+          </div>
+          <div class="stack">
+            <div class="kpi">
+              <div class="big" id="bmrOut">BMR: —</div>
+              <div class="small">Basal metabolic rate (resting). Formula: Mifflin-St Jeor.</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="tdeeOut">TDEE: —</div>
+              <div class="small">Estimated daily burn = BMR × activity factor.</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="goalOut">Goal calories: —</div>
+              <div class="small" id="goalNote">Based on goal and deficit/surplus setting.</div>
+            </div>
+
+            <div class="kpi">
+              <div class="big">Macro suggestion</div>
+              <div class="small mono" id="macroOut">—</div>
+              <div class="small">Protein/fat set by g/kg. Carbs fill the remainder.</div>
+            </div>
+
+            <div class="kpi">
+              <div class="big">Sanity checks</div>
+              <div class="small mono" id="checksOut">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Tip: for better accuracy, pick the lowest activity level you can defend consistently.</div>
+      <div>Keys: <span class="kbd">Tab</span> move fields • <span class="kbd">Enter</span> calculate</div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const el = (id) => document.getElementById(id);
+
+  const unitMode = el("unitMode");
+  const unitModeLabel = el("unitModeLabel");
+
+  const metricRow = el("metricRow");
+  const imperialRow = el("imperialRow");
+
+  const sex = el("sex");
+  const age = el("age");
+  const activity = el("activity");
+
+  const weightKg = el("weightKg");
+  const heightCm = el("heightCm");
+
+  const weightLb = el("weightLb");
+  const heightFt = el("heightFt");
+  const heightIn = el("heightIn");
+
+  const goal = el("goal");
+  const delta = el("delta");
+  const proteinGkg = el("proteinGkg");
+  const fatGkg = el("fatGkg");
+
+  const bmrOut = el("bmrOut");
+  const tdeeOut = el("tdeeOut");
+  const goalOut = el("goalOut");
+  const goalNote = el("goalNote");
+  const macroOut = el("macroOut");
+  const checksOut = el("checksOut");
+
+  const calcBtn = el("calcBtn");
+  const copyBtn = el("copyBtn");
+
+  function n(v){ const x = Number(v); return Number.isFinite(x) ? x : null; }
+  function fmt(x, d=0){
+    if (!Number.isFinite(x)) return "—";
+    const s = x.toFixed(d);
+    return s.replace(/\.0+$/,"");
+  }
+
+  // Unit normalization: return {kg, cm}.
+  function readBody(){
+    const a = n(age.value);
+    if (!a || a <= 0) return null;
+
+    if (unitMode.value === "metric"){
+      const kg = n(weightKg.value);
+      const cm = n(heightCm.value);
+      if (!kg || !cm || kg <= 0 || cm <= 0) return null;
+      return { kg, cm, age:a };
+    }
+
+    // Imperial: lb + ft/in -> convert.
+    const lb = n(weightLb.value);
+    const ft = n(heightFt.value);
+    const inch = n(heightIn.value);
+    if (!lb || lb <= 0) return null;
+    if (ft === null || inch === null) return null;
+
+    const totalIn = (ft * 12) + inch;
+    if (totalIn <= 0) return null;
+
+    const kg = lb * 0.45359237;
+    const cm = totalIn * 2.54;
+    return { kg, cm, age:a };
+  }
+
+  // Mifflin-St Jeor (kcal/day).
+  function bmrMifflin({kg, cm, age}, sexVal){
+    // Male: +5, Female: -161
+    const s = (sexVal === "male") ? 5 : -161;
+    return (10 * kg) + (6.25 * cm) - (5 * age) + s;
+  }
+
+  function calc(){
+    const body = readBody();
+    if (!body){
+      bmrOut.textContent = "BMR: —";
+      tdeeOut.textContent = "TDEE: —";
+      goalOut.textContent = "Goal calories: —";
+      goalNote.textContent = "Based on goal and deficit/surplus setting.";
+      macroOut.textContent = "—";
+      checksOut.textContent = "—";
+      return;
+    }
+
+    const bmr = bmrMifflin(body, sex.value);
+    const act = Number(activity.value);
+    const tdee = bmr * act;
+
+    // Goal calories: maintain or +/- delta.
+    const d = Number(delta.value);
+    let target = tdee;
+    let note = "Maintain: target equals TDEE.";
+    if (goal.value === "cut"){
+      target = tdee - d;
+      note = `Cut: TDEE - ${d} kcal/day.`;
+    } else if (goal.value === "bulk"){
+      target = tdee + d;
+      note = `Bulk: TDEE + ${d} kcal/day.`;
+    }
+
+    // Macro plan:
+    // - protein/fat derived from kg
+    // - carbs = remaining calories / 4
+    const p = Number(proteinGkg.value) * body.kg;
+    const f = Number(fatGkg.value) * body.kg;
+
+    const calsP = p * 4;
+    const calsF = f * 9;
+    const calsLeft = target - (calsP + calsF);
+    const carbs = Math.max(0, calsLeft / 4);
+
+    // Quick checks: avoid absurd targets.
+    const warn = [];
+    if (target < 1200) warn.push("Very low calories (check inputs).");
+    if (target > 4500) warn.push("Very high calories (check inputs).");
+    if (act < 1.2 || act > 1.9) warn.push("Activity factor unusual.");
+    if (body.cm < 120 || body.cm > 230) warn.push("Height unusual.");
+    if (body.kg < 35 || body.kg > 200) warn.push("Weight unusual.");
+
+    bmrOut.textContent = `BMR: ${fmt(bmr,0)} kcal/day`;
+    tdeeOut.textContent = `TDEE: ${fmt(tdee,0)} kcal/day`;
+    goalOut.textContent = `Goal calories: ${fmt(target,0)} kcal/day`;
+    goalNote.textContent = note;
+
+    macroOut.textContent =
+      `Protein: ${fmt(p,0)} g  •  Fat: ${fmt(f,0)} g  •  Carbs: ${fmt(carbs,0)} g`;
+
+    checksOut.textContent = warn.length ? warn.join("  |  ") : "No red flags from basic checks.";
+  }
+
+  function syncMode(){
+    const m = unitMode.value;
+    unitModeLabel.textContent = (m === "metric") ? "Metric" : "Imperial";
+    metricRow.style.display = (m === "metric") ? "" : "none";
+    imperialRow.style.display = (m === "imperial") ? "" : "none";
+  }
+
+  calcBtn.addEventListener("click", calc);
+  copyBtn.addEventListener("click", async () => {
+    // Copy something people can paste without cleanup.
+    const text = [
+      bmrOut.textContent,
+      tdeeOut.textContent,
+      goalOut.textContent,
+      `Macros: ${macroOut.textContent}`
+    ].join("\n");
+    try{
+      await navigator.clipboard.writeText(text);
+      const old = copyBtn.textContent;
+      copyBtn.textContent = "Copied";
+      setTimeout(() => copyBtn.textContent = old, 900);
+    } catch {}
+  });
+
+  unitMode.addEventListener("change", () => { syncMode(); calc(); });
+  [sex, age, activity, weightKg, heightCm, weightLb, heightFt, heightIn, goal, delta, proteinGkg, fatGkg]
+    .forEach(x => x.addEventListener("input", () => {}));
+
+  // Enter = calculate (simple, no surprises).
+  window.addEventListener("keydown", (e) => { if (e.key === "Enter") calc(); });
+
+  syncMode();
+  calc();
+})();
+</script>
+</body>
+</html>
